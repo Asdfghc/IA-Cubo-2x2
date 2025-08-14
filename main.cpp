@@ -1,5 +1,9 @@
 #include <iostream>
 #include <array>
+#include <queue>
+#include <set>
+#include <windows.h>
+#include <algorithm>
 
 struct Estado {
     std::array<int,7> pos; // cubie em cada posição global 0..6 (sem o 7 = DRB)
@@ -9,6 +13,25 @@ struct Estado {
         for(int i=0; i<7; i++) {
             std::cout << "pos[" << i << "] = " << pos[i] << ", ori[" << i << "] = " << ori[i] << "\n";
         }
+    }
+
+    bool operator==(const Estado& rhs) const {
+        return pos == rhs.pos && ori == rhs.ori;
+    }
+
+    bool operator<(const Estado& rhs) const {
+        return pos != rhs.pos || ori != rhs.ori;
+    }
+};
+
+struct No {
+    Estado estado;
+    char movimento;
+    No *pai;
+
+    void print() const {
+        estado.print();
+        std::cout << "movimento = " << movimento << "\n";
     }
 };
 
@@ -96,31 +119,71 @@ Estado aplicarMovimento(const Estado& s, char mov) {
     return r;
 }
 
+
 int main() {
-    Estado s = {{0,1,2,3,4,5,6},
-            {0,0,0,0,0,0,0}};
+    Estado estado_inicial = {{2,3,1,4,0,5,6}, {1,2,0,0,2,0,1}};
+    Estado final = {{0,1,2,3,4,5,6}, {0,0,0,0,0,0,0}};
 
-    std::cout << "Estado inicial:\n";
-    s.print();
+    std::queue<No*> Estrutura;
+    std::set<Estado> Explorados;
+    std::vector<No*> todos_nos; // para liberar memória depois
 
-    
-    Estado r = aplicarMovimento(s, 'L');
-    std::cout << "\nApós L:\n";
-    r.print();
+    No* inicial = new No{estado_inicial, '\0', nullptr};
+    Estrutura.push(inicial);
+    todos_nos.push_back(inicial);
 
-    Estado u = aplicarMovimento(r, 'U');
-    std::cout << "\nApós U:\n";
-    u.print();
+    bool achou = false;
+    while (!Estrutura.empty()) {
+        No* atual = Estrutura.front();
+        Estrutura.pop();
 
-    Estado f = aplicarMovimento(u, 'f');
-    std::cout << "\nApós F':\n";
-    f.print();
-    
+        if (atual->estado == final) {
+            std::cout << "achou" << std::endl;
+            // Reconstruir caminho
+            std::vector<No*> caminho;
+            No* ponteiro = atual;
+            while (ponteiro != nullptr) {
+                caminho.push_back(ponteiro);
+                ponteiro = ponteiro->pai;
+            }
+            std::reverse(caminho.begin(), caminho.end());
+            for (size_t i = 1; i < caminho.size(); ++i) { // começa do 1 para ignorar o nó inicial
+                std::cout << caminho[i]->movimento << std::endl;
+                Sleep(100);
+                //caminho[i]->estado.print();
+            }
+            achou = true;
+            break;
+        }
 
-    //Estado a = aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(s, 'U'), 'l'), 'U'), 'l'), 'U'), 'l'), 'U'), 'l'), 'U');
-    //Estado b = aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(aplicarMovimento(a, 'l'), 'U'), 'l'), 'U'), 'l'), 'U'), 'l'), 'U'), 'l');
+        Explorados.insert(atual->estado);
 
-    //b.print();
+        // Gerar próximos estados
+        struct Mov {
+            char c;
+            Estado e;
+        } movs[] = {
+            {'U', aplicarMovimento(atual->estado, 'U')},
+            {'u', aplicarMovimento(atual->estado, 'u')},
+            {'L', aplicarMovimento(atual->estado, 'L')},
+            {'l', aplicarMovimento(atual->estado, 'l')},
+            {'F', aplicarMovimento(atual->estado, 'F')},
+            {'f', aplicarMovimento(atual->estado, 'f')}
+        };
+        for (const auto& mov : movs) {
+            if (Explorados.find(mov.e) == Explorados.end()) {
+                No* novo = new No{mov.e, mov.c, atual};
+                Estrutura.push(novo);
+                todos_nos.push_back(novo);
+            }
+        }
+    }
 
+    if (!achou) {
+        std::cout << "nao achou";
+    }
+
+    // Libera memória
+    for (No* n : todos_nos) delete n;
     return 0;
 }
