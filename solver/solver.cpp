@@ -2,7 +2,6 @@
 #include <array>
 #include <queue>
 #include <set>
-#include <windows.h>
 #include <algorithm>
 
 struct Estado {
@@ -149,7 +148,6 @@ int main() {
             std::reverse(caminho.begin(), caminho.end());
             for (size_t i = 1; i < caminho.size(); ++i) { // começa do 1 para ignorar o nó inicial
                 std::cout << caminho[i]->movimento << std::endl;
-                Sleep(100);
                 //caminho[i]->estado.print();
             }
             achou = true;
