@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include <array>
 #include <queue>
 #include <set>
@@ -21,10 +22,11 @@ struct No {
 const Estado final = {{0,1,2,3,4,5,6}, {0,0,0,0,0,0,0}};
 // Retorna true se achou solução, false se não achou
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
-bool solve(const Estado& estado_inicial, vector<char>& caminho) {
+bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
+    int explorados = 0;
+    auto now = chrono::system_clock::now();
 
     queue<No*> Estrutura;
-    set<Estado> Explorados;
     vector<No*> todos_nos; // para liberar memória depois
 
     No* inicial = new No{estado_inicial, '\0', nullptr};
@@ -49,20 +51,30 @@ bool solve(const Estado& estado_inicial, vector<char>& caminho) {
                 caminho.push_back(caminho_nos[i]->movimento);
             }
             achou = true;
+
             //cout << "Nº de estados explorados: " << Explorados.size() << endl;
+            float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
+            cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
+            cout << "Nº de estados explorados: " << explorados << endl;
             break;
+            
         }
 
-        Explorados.insert(atual->estado);
+        explorados++;
 
         // Gerar próximos estados
         for (char movimento : movimentos) {
+            // Não permite movimento inverso do anterior
+            if (atual->movimento != '\0' && movimento == movimentos_inversos.at(atual->movimento))
+                continue;
+            // Não permite 3 movimentos iguais seguidos
+            if (atual->pai && atual->movimento == movimento && atual->pai->movimento == movimento)
+                continue;
+            
             Estado proximo = Estado::aplicarMovimento(atual->estado, movimento);
-            if (Explorados.find(proximo) == Explorados.end()) {
-                No* novo = new No{proximo, movimento, atual};
-                Estrutura.push(novo);
-                todos_nos.push_back(novo);
-            }
+            No* novo = new No{proximo, movimento, atual};
+            Estrutura.push(novo);
+            todos_nos.push_back(novo);
         }
     }
 
@@ -75,14 +87,16 @@ bool solve(const Estado& estado_inicial, vector<char>& caminho) {
 int main() {
     Estado estado_inicial = {{2,3,1,4,0,5,6}, {1,2,0,0,2,0,1}};
     vector<char> caminho;
-    bool achou = solve(estado_inicial, caminho);
+    
+    bool achou = solve_bfs(estado_inicial, caminho);
     if (achou) {
-        cout << "achou" << endl;
+        cout << "achou: ";
         for (char mov : caminho) {
-            cout << mov << endl;
+            cout << mov << " ";
         }
     } else {
         cout << "nao achou";
     }
+    cout << endl;
     return 0;
 }

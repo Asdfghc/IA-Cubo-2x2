@@ -2,8 +2,14 @@
 
 #include <array>
 #include <iostream>
+#include <map>
 
 const char movimentos[] = {'U', 'u', 'L', 'l', 'F', 'f'};
+const std::map<char, char> movimentos_inversos = {
+    {'U', 'u'}, {'u', 'U'},
+    {'L', 'l'}, {'l', 'L'},
+    {'F', 'f'}, {'f', 'F'}
+};
 
 struct Estado {
     std::array<int,7> pos; // cubie em cada posição global 0..6 (sem o 7 = DRB)
