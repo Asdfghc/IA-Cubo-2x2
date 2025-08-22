@@ -28,4 +28,5 @@ lucas@Lucas:~/IA-Cubo-2x2$ g++ solver/solver.cpp -Iinclude -o build/solver
 lucas@Lucas:~/IA-Cubo-2x2$ ./build/solver
 Tempo de execução: 0.201 segundos
 Nº de estados explorados: 217943
+Total de memória alocada: 75767400 bytes
 achou: u f L u L L F U 

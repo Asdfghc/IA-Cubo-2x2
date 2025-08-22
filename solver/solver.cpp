@@ -52,7 +52,6 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
             }
             achou = true;
 
-            //cout << "Nº de estados explorados: " << Explorados.size() << endl;
             float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
             cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
             cout << "Nº de estados explorados: " << explorados << endl;
@@ -79,6 +78,7 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
     }
 
     // Libera memória
+    cout << "Total de memória alocada: " << todos_nos.size() * sizeof(No) << " bytes" << endl;
     for (No* n : todos_nos) delete n;
     return achou;
 }
