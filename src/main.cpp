@@ -22,25 +22,45 @@ int main() {
     CubeRenderer renderer;
     //CubeState state;
 
-    while(!glfwWindowShouldClose(window)){
+    // Cria os cubies do cubo 2x2 (8 peças)
+    std::vector<Cubie> cubies;
+    float offset = 0.55f; // distância entre os cubies
+
+    for (int x = -1; x <= 1; x += 2) {
+        for (int y = -1; y <= 1; y += 2) {
+            for (int z = -1; z <= 1; z += 2) {
+                Cubie c;
+                c.position = glm::vec3(x * offset, y * offset, z * offset);
+                c.colors = {
+                    glm::vec3(1.0f,0.0f,0.0f),   // face 0: vermelho
+                    glm::vec3(0.0f,1.0f,0.0f),   // face 1: verde
+                    glm::vec3(0.0f,0.0f,1.0f),   // face 2: azul
+                    glm::vec3(1.0f,1.0f,0.0f),   // face 3: amarelo
+                    glm::vec3(1.0f,0.0f,1.0f),   // face 4: magenta
+                    glm::vec3(0.0f,1.0f,1.0f)    // face 5: ciano
+                };
+                cubies.push_back(c);
+            }
+        }
+    }
+    renderer.setCubies(cubies);
+
+    while(!glfwWindowShouldClose(window)) {
         glClearColor(0.1f,0.1f,0.1f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Atualiza estado do cubo
-        //state.applyMove(Move::U);
-        renderer.updateColors({
-            glm::vec3(1,0,0),   // Red
-            glm::vec3(0,1,0),   // Green
-            glm::vec3(0,0,1),   // Blue
-            glm::vec3(1,1,0),   // Yellow
-            glm::vec3(1,0,1),   // Magenta
-            glm::vec3(0,1,1),   // Cyan
-            glm::vec3(1,1,1),   // White
-            glm::vec3(0,0,0)    // Black
-        });
 
-        glm::mat4 view = glm::translate(glm::mat4(1.0f),glm::vec3(0,0,-3));
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);
+         glm::mat4 view = glm::lookAt(
+            glm::vec3(3, 3, 5),  // posição da câmera
+            glm::vec3(0, 0, 0),  // olha para o centro
+            glm::vec3(0, 1, 0)   // up
+        );
+        glm::mat4 projection = glm::perspective(
+            glm::radians(45.0f),
+            800.0f / 600.0f,
+            0.1f,
+            100.0f
+        );
 
         renderer.draw(view,projection);
 

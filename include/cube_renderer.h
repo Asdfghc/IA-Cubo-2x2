@@ -1,21 +1,24 @@
-#ifndef CUBE_RENDERER_H
-#define CUBE_RENDERER_H
-
-#include <GL/glew.h>
+#pragma once
+#include "shader.h"
 #include <glm/glm.hpp>
 #include <vector>
-#include "shader.h"
+#include <array>
+
+struct Cubie {
+    glm::vec3 position;               // posição do cubinho no espaço
+    std::array<glm::vec3, 6> colors;  // uma cor por face: +X, -X, +Y, -Y, +Z, -Z
+};
 
 class CubeRenderer {
 public:
     CubeRenderer();
     ~CubeRenderer();
-    void updateColors(const std::vector<glm::vec3>& colors);
     void draw(const glm::mat4& view, const glm::mat4& projection);
-private:
-    GLuint VAO, VBO, EBO;
-    Shader shader;
-    std::vector<glm::vec3> currentColors;
-};
+    void setCubies(const std::vector<Cubie>& cubies);
+    void updateCubieColors(const std::array<glm::vec3, 6>& colors);
 
-#endif
+private:
+    unsigned int VAO, VBO, EBO;
+    Shader shader;
+    std::vector<Cubie> cubies;
+};
