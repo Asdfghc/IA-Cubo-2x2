@@ -5,15 +5,21 @@
 #include <map>
 
 const char movimentos[] = {'U', 'u', 'L', 'l', 'F', 'f'};
-const std::map<char, char> movimentos_inversos = {
-    {'U', 'u'}, {'u', 'U'},
-    {'L', 'l'}, {'l', 'L'},
-    {'F', 'f'}, {'f', 'F'}
-};
+inline char movimentos_inversos(char mov) {
+    switch(mov) {
+        case 'U': return 'u';
+        case 'u': return 'U';
+        case 'L': return 'l';
+        case 'l': return 'L';
+        case 'F': return 'f';
+        case 'f': return 'F';
+        default: return mov;
+    }
+}
 
 struct Estado {
-    std::array<int,7> pos; // cubie em cada posição global 0..6 (sem o 7 = DRB)
-    std::array<int,7> ori; // orientação (0,1,2)
+    std::array<uint8_t,7> pos; // cubie em cada posição global 0..6 (sem o 7 = DRB)
+    std::array<uint8_t,7> ori; // orientação (0,1,2)
 
     void print() const {
         for(int i=0; i<7; i++) {

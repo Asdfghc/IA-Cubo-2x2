@@ -64,7 +64,7 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
         // Gerar próximos estados
         for (char movimento : movimentos) {
             // Não permite movimento inverso do anterior
-            if (atual->movimento != '\0' && movimento == movimentos_inversos.at(atual->movimento))
+            if (atual->movimento != '\0' && movimento == movimentos_inversos(atual->movimento))
                 continue;
             // Não permite 3 movimentos iguais seguidos
             if (atual->pai && atual->movimento == movimento && atual->pai->movimento == movimento)
