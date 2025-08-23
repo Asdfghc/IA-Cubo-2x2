@@ -1,74 +1,112 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include "cube_renderer.h"
 #include <iostream>
+#include <cmath>
+#include <vector>
+#include <chrono>
+#include <thread>
 
-int main() {
-    if(!glfwInit()){ std::cerr<<"Falha em GLFW\n"; return -1;}
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow* window = glfwCreateWindow(800,600,"Cubo 3D",NULL,NULL);
-    if(!window){ std::cerr<<"Falha ao criar janela\n"; glfwTerminate(); return -1;}
-    glfwMakeContextCurrent(window);
+struct Vec3 {
+    float x, y, z;
+};
 
-    glewExperimental = GL_TRUE;
-    if(glewInit()!=GLEW_OK){ std::cerr<<"Falha em GLEW\n"; return -1;}
+struct Color {
+    int r, g, b;
+};
 
-    glEnable(GL_DEPTH_TEST);
+struct Vertex {
+    Vec3 pos;
+    Color color;
+};
 
-    CubeRenderer renderer;
-    //CubeState state;
+struct Quad {
+    Vertex vertices[4];
+};
 
-    // Cria os cubies do cubo 2x2 (8 peças)
-    std::vector<Cubie> cubies;
-    float offset = 0.55f; // distância entre os cubies
+// Terminal buffer
+const int WIDTH = 80;
+const int HEIGHT = 40;
+char screen[HEIGHT][WIDTH];
+float zbuffer[HEIGHT][WIDTH];
 
-    for (int x = -1; x <= 1; x += 2) {
-        for (int y = -1; y <= 1; y += 2) {
-            for (int z = -1; z <= 1; z += 2) {
-                Cubie c;
-                c.position = glm::vec3(x * offset, y * offset, z * offset);
-                c.colors = {
-                    glm::vec3(1.0f,0.0f,0.0f),   // face 0: vermelho
-                    glm::vec3(0.0f,1.0f,0.0f),   // face 1: verde
-                    glm::vec3(0.0f,0.0f,1.0f),   // face 2: azul
-                    glm::vec3(1.0f,1.0f,0.0f),   // face 3: amarelo
-                    glm::vec3(1.0f,0.0f,1.0f),   // face 4: magenta
-                    glm::vec3(0.0f,1.0f,1.0f)    // face 5: ciano
-                };
-                cubies.push_back(c);
-            }
+// Projeção perspectiva simples
+Vec3 project(const Vec3& v, float fov, float aspect, float zNear) {
+    float scale = fov / (v.z + zNear);
+    return {v.x * scale * aspect, v.y * scale, v.z};
+}
+
+// Transformações
+Vec3 rotateY(const Vec3& v, float angle) {
+    float c = cos(angle), s = sin(angle);
+    return {v.x * c - v.z * s, v.y, v.x * s + v.z * c};
+}
+
+// Desenha um ponto no buffer
+void drawPoint(const Vec3& v, const Color& col) {
+    int x = (int)((v.x + 1) * 0.5f * WIDTH);
+    int y = (int)((1 - (v.y + 1) * 0.5f) * HEIGHT);
+    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+        if (v.z > zbuffer[y][x]) {
+            zbuffer[y][x] = v.z;
+            std::cout << "\033[" << y+1 << ";" << x+1 << "H"; // Move cursor
+            std::cout << "\033[38;2;" << col.r << ";" << col.g << ";" << col.b << "m" << "#" << "\033[0m";
         }
     }
-    renderer.setCubies(cubies);
+}
 
-    while(!glfwWindowShouldClose(window)) {
-        glClearColor(0.1f,0.1f,0.1f,1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+// Renderiza um quad (apenas vértices, depois pode interpolar)
+void drawQuad(const Quad& q, float fov, float aspect, float zNear) {
+    for (int i = 0; i < 4; ++i) {
+        Vec3 p = project(q.vertices[i].pos, fov, aspect, zNear);
+        drawPoint(p, q.vertices[i].color);
+    }
+}
 
+// Limpa o terminal e buffers
+void clearScreen() {
+    std::cout << "\033[2J"; // Clear screen
+    std::cout << "\033[H";  // Move cursor home
+    for (int y = 0; y < HEIGHT; ++y)
+        for (int x = 0; x < WIDTH; ++x)
+            zbuffer[y][x] = -1e9;
+}
 
-         glm::mat4 view = glm::lookAt(
-            glm::vec3(3, 3, 5),  // posição da câmera
-            glm::vec3(0, 0, 0),  // olha para o centro
-            glm::vec3(0, 1, 0)   // up
-        );
-        glm::mat4 projection = glm::perspective(
-            glm::radians(45.0f),
-            800.0f / 600.0f,
-            0.1f,
-            100.0f
-        );
+int main() {
+    // Define cubo
+    std::vector<Quad> cube;
+    Color colors[6] = {{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255}};
 
-        renderer.draw(view,projection);
+    Vec3 verts[8] = {
+        {-0.5f,-0.5f,-0.5f},{0.5f,-0.5f,-0.5f},{0.5f,0.5f,-0.5f},{-0.5f,0.5f,-0.5f},
+        {-0.5f,-0.5f,0.5f},{0.5f,-0.5f,0.5f},{0.5f,0.5f,0.5f},{-0.5f,0.5f,0.5f}
+    };
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+    int faces[6][4] = {
+        {0,1,2,3},{4,5,6,7},{0,1,5,4},{2,3,7,6},{0,3,7,4},{1,2,6,5}
+    };
+
+    for (int f = 0; f < 6; ++f) {
+        Quad q;
+        for (int i = 0; i < 4; ++i) {
+            q.vertices[i].pos = verts[faces[f][i]];
+            q.vertices[i].color = colors[f];
+        }
+        cube.push_back(q);
     }
 
-    glfwDestroyWindow(window);
-    glfwTerminate();
-    return 0;
+    float angle = 0.0f;
+    while (true) {
+        clearScreen();
+
+        // Rotaciona cubo
+        std::vector<Quad> transformed = cube;
+        for (auto& q : transformed)
+            for (auto& v : q.vertices)
+                v.pos = rotateY(v.pos, angle);
+
+        for (auto& q : transformed)
+            drawQuad(q, 1.0f, float(WIDTH)/HEIGHT, 3.0f);
+
+        std::cout.flush();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        angle += 0.05f;
+    }
 }
