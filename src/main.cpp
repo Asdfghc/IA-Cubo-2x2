@@ -1,112 +1,103 @@
-#include <iostream>
-#include <cmath>
-#include <vector>
-#include <chrono>
-#include <thread>
+#include <GL/glut.h>
 
-struct Vec3 {
-    float x, y, z;
-};
+float angle = 0.0f;
 
-struct Color {
-    int r, g, b;
-};
+void drawCubie(float x, float y, float z) {
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    glBegin(GL_QUADS);
 
-struct Vertex {
-    Vec3 pos;
-    Color color;
-};
+    // Frente (vermelho)
+    glColor3f(1,0,0);
+    glVertex3f(-0.5,-0.5, 0.5);
+    glVertex3f( 0.5,-0.5, 0.5);
+    glVertex3f( 0.5, 0.5, 0.5);
+    glVertex3f(-0.5, 0.5, 0.5);
 
-struct Quad {
-    Vertex vertices[4];
-};
+    // Trás (laranja)
+    glColor3f(1,0.5,0);
+    glVertex3f(-0.5,-0.5,-0.5);
+    glVertex3f(-0.5, 0.5,-0.5);
+    glVertex3f( 0.5, 0.5,-0.5);
+    glVertex3f( 0.5,-0.5,-0.5);
 
-// Terminal buffer
-const int WIDTH = 80;
-const int HEIGHT = 40;
-char screen[HEIGHT][WIDTH];
-float zbuffer[HEIGHT][WIDTH];
+    // Esquerda (verde)
+    glColor3f(0,1,0);
+    glVertex3f(-0.5,-0.5,-0.5);
+    glVertex3f(-0.5,-0.5, 0.5);
+    glVertex3f(-0.5, 0.5, 0.5);
+    glVertex3f(-0.5, 0.5,-0.5);
 
-// Projeção perspectiva simples
-Vec3 project(const Vec3& v, float fov, float aspect, float zNear) {
-    float scale = fov / (v.z + zNear);
-    return {v.x * scale * aspect, v.y * scale, v.z};
+    // Direita (azul)
+    glColor3f(0,0,1);
+    glVertex3f(0.5,-0.5,-0.5);
+    glVertex3f(0.5, 0.5,-0.5);
+    glVertex3f(0.5, 0.5, 0.5);
+    glVertex3f(0.5,-0.5, 0.5);
+
+    // Topo (branco)
+    glColor3f(1,1,1);
+    glVertex3f(-0.5, 0.5,-0.5);
+    glVertex3f(-0.5, 0.5, 0.5);
+    glVertex3f( 0.5, 0.5, 0.5);
+    glVertex3f( 0.5, 0.5,-0.5);
+
+    // Fundo (amarelo)
+    glColor3f(1,1,0);
+    glVertex3f(-0.5,-0.5,-0.5);
+    glVertex3f( 0.5,-0.5,-0.5);
+    glVertex3f( 0.5,-0.5, 0.5);
+    glVertex3f(-0.5,-0.5, 0.5);
+
+    glEnd();
+    glPopMatrix();
 }
 
-// Transformações
-Vec3 rotateY(const Vec3& v, float angle) {
-    float c = cos(angle), s = sin(angle);
-    return {v.x * c - v.z * s, v.y, v.x * s + v.z * c};
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // câmera
+    glTranslatef(0,0,-6);
+    glRotatef(angle,1,1,0);
+
+    // desenha os 8 cubinhos (2x2x2) mais próximos
+    float offset = 0.52f; // distância entre centros dos cubinhos
+    for (float x = -offset; x <= offset; x += 2*offset)
+        for (float y = -offset; y <= offset; y += 2*offset)
+            for (float z = -offset; z <= offset; z += 2*offset)
+                drawCubie(x, y, z);
+
+    glutSwapBuffers();
 }
 
-// Desenha um ponto no buffer
-void drawPoint(const Vec3& v, const Color& col) {
-    int x = (int)((v.x + 1) * 0.5f * WIDTH);
-    int y = (int)((1 - (v.y + 1) * 0.5f) * HEIGHT);
-    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-        if (v.z > zbuffer[y][x]) {
-            zbuffer[y][x] = v.z;
-            std::cout << "\033[" << y+1 << ";" << x+1 << "H"; // Move cursor
-            std::cout << "\033[38;2;" << col.r << ";" << col.g << ";" << col.b << "m" << "#" << "\033[0m";
-        }
-    }
+void reshape(int w, int h) {
+    glViewport(0,0,w,h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, (double)w/h, 1.0, 100.0);
+    glMatrixMode(GL_MODELVIEW);
 }
 
-// Renderiza um quad (apenas vértices, depois pode interpolar)
-void drawQuad(const Quad& q, float fov, float aspect, float zNear) {
-    for (int i = 0; i < 4; ++i) {
-        Vec3 p = project(q.vertices[i].pos, fov, aspect, zNear);
-        drawPoint(p, q.vertices[i].color);
-    }
+void timer(int) {
+    angle += 1.0f;  // gira
+    if(angle > 360) angle -= 360;
+    glutPostRedisplay();
+    glutTimerFunc(16, timer, 0);
 }
 
-// Limpa o terminal e buffers
-void clearScreen() {
-    std::cout << "\033[2J"; // Clear screen
-    std::cout << "\033[H";  // Move cursor home
-    for (int y = 0; y < HEIGHT; ++y)
-        for (int x = 0; x < WIDTH; ++x)
-            zbuffer[y][x] = -1e9;
-}
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(600,600);
+    glutCreateWindow("Cubo Magico 2x2");
 
-int main() {
-    // Define cubo
-    std::vector<Quad> cube;
-    Color colors[6] = {{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255}};
+    glEnable(GL_DEPTH_TEST);
 
-    Vec3 verts[8] = {
-        {-0.5f,-0.5f,-0.5f},{0.5f,-0.5f,-0.5f},{0.5f,0.5f,-0.5f},{-0.5f,0.5f,-0.5f},
-        {-0.5f,-0.5f,0.5f},{0.5f,-0.5f,0.5f},{0.5f,0.5f,0.5f},{-0.5f,0.5f,0.5f}
-    };
-
-    int faces[6][4] = {
-        {0,1,2,3},{4,5,6,7},{0,1,5,4},{2,3,7,6},{0,3,7,4},{1,2,6,5}
-    };
-
-    for (int f = 0; f < 6; ++f) {
-        Quad q;
-        for (int i = 0; i < 4; ++i) {
-            q.vertices[i].pos = verts[faces[f][i]];
-            q.vertices[i].color = colors[f];
-        }
-        cube.push_back(q);
-    }
-
-    float angle = 0.0f;
-    while (true) {
-        clearScreen();
-
-        // Rotaciona cubo
-        std::vector<Quad> transformed = cube;
-        for (auto& q : transformed)
-            for (auto& v : q.vertices)
-                v.pos = rotateY(v.pos, angle);
-
-        for (auto& q : transformed)
-            drawQuad(q, 1.0f, float(WIDTH)/HEIGHT, 3.0f);
-
-        std::cout.flush();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        angle += 0.05f;
-    }
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutTimerFunc(0, timer, 0);
+    glutMainLoop();
+    return 0;
 }
