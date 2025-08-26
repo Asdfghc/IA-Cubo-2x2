@@ -1,4 +1,4 @@
-Compilar: `g++ src/main.cpp -Iinclude -o build/main`
+Compilar: `g++ src/main.cpp -Iinclude -o build/main -lGL -lGLU -lglut`
 Rodar: `./build/main`
 
 
