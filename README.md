@@ -32,7 +32,7 @@ Total de memória alocada: 25255800 bytes
 achou: u f L u L L F U 
 
 # Com mais eliminação de movimentos repetidos
-Tempo de execução: 0.076 segundos
+Tempo de execução: 0.055 segundos
 Nº de estados explorados: 127405
 Total de memória alocada: 13605360 bytes
 achou: u f L u L L F U 
