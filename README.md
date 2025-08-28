@@ -1,10 +1,9 @@
-Instalar as dependências (linux): `sudo apt-get install libglfw3-dev libglew-dev libglm-dev`
-Compilar: `g++ src/*.cpp solver/solver.cpp -Iinclude -lglfw -lGLEW -lGL -o build/main`
+Compilar: `g++ src/main.cpp -Iinclude -o build/main -lGL -lGLU -lglut`
 Rodar: `./build/main`
 
 
 Para teste do solver:
-Compilar: `g++ solver/solver.cpp -Iinclude -o build/solver`
+Compilar: `g++ src/solver.cpp -Iinclude -o build/solver`
 Rodar: `./build/solver`
 
 
