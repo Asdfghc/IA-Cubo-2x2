@@ -12,11 +12,6 @@ struct No {
     Estado estado;
     char movimento;
     No *pai;
-
-    void print() const {
-        estado.print();
-        cout << "movimento = " << movimento << "\n";
-    }
 };
 
 const Estado final = {{0,1,2,3,4,5,6}, {0,0,0,0,0,0,0}};
@@ -27,7 +22,7 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
     auto now = chrono::system_clock::now();
 
     queue<No*> Estrutura;
-    vector<No*> todos_nos; // para liberar memória depois
+    vector<No*> todos_nos;
 
     No* inicial = new No{estado_inicial, '\0', nullptr};
     Estrutura.push(inicial);
@@ -69,6 +64,7 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
             // Não permite 3 movimentos iguais seguidos
             if (atual->pai && atual->movimento == movimento && atual->pai->movimento == movimento)
                 continue;
+            // Não permite dois movimentos anti-horários iguais seguidos
             if (atual->movimento == movimento && (movimento == 'u' || movimento == 'l' || movimento == 'f'))
                 continue;
             
@@ -80,11 +76,11 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
     }
 
     // Libera memória
-    cout << "Total de memória alocada: " << todos_nos.size() * sizeof(No) << " bytes" << endl;
     for (No* n : todos_nos) delete n;
     return achou;
 }
 
+#ifdef SOLVER_STANDALONE
 // main para teste standalone
 int main() {
     Estado estado_inicial = {{2,3,1,4,0,5,6}, {1,2,0,0,2,0,1}};
@@ -102,3 +98,4 @@ int main() {
     cout << endl;
     return 0;
 }
+#endif

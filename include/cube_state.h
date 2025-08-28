@@ -1,10 +1,40 @@
 #pragma once
-
 #include <array>
-#include <iostream>
-#include <map>
+#include <cstdint>
 
-const char movimentos[] = {'U', 'u', 'L', 'l', 'F', 'f'};
+// --- Enumerações e tipos auxiliares ---
+
+enum class Color {
+    None,
+    White, Yellow,
+    Green, Blue,
+    Orange, Red
+};
+
+struct RGB {
+    float r, g, b;
+};
+
+enum Face { F=0, B=1, L=2, R=3, U=4, D=5 };
+
+// --- Funções utilitárias de cor ---
+
+inline RGB colorToRGB(Color c) {
+    switch (c) {
+        case Color::White:  return {1.0f, 1.0f, 1.0f};
+        case Color::Yellow: return {1.0f, 1.0f, 0.0f};
+        case Color::Red:    return {1.0f, 0.0f, 0.0f};
+        case Color::Orange: return {1.0f, 0.5f, 0.0f};
+        case Color::Blue:   return {0.0f, 0.0f, 1.0f};
+        case Color::Green:  return {0.0f, 1.0f, 0.0f};
+        case Color::None:   return {0.1f, 0.1f, 0.1f};
+    }
+    return {0.0f, 0.0f, 0.0f};
+}
+
+// --- Constantes de movimentos ---
+
+constexpr char movimentos[] = {'U', 'u', 'L', 'l', 'F', 'f'};
 inline char movimentos_inversos(char mov) {
     switch(mov) {
         case 'U': return 'u';
@@ -17,15 +47,11 @@ inline char movimentos_inversos(char mov) {
     }
 }
 
+// --- Estrutura do estado do cubo ---
+
 struct Estado {
     std::array<uint8_t,7> pos; // cubie em cada posição global 0..6 (sem o 7 = DRB)
     std::array<uint8_t,7> ori; // orientação (0,1,2)
-
-    void print() const {
-        for(int i=0; i<7; i++) {
-            std::cout << "pos[" << i << "] = " << pos[i] << ", ori[" << i << "] = " << ori[i] << "\n";
-        }
-    }
 
     bool operator==(const Estado& rhs) const {
         return pos == rhs.pos && ori == rhs.ori;
@@ -35,6 +61,7 @@ struct Estado {
         return pos != rhs.pos || ori != rhs.ori;
     }
 
+    // Aplica um movimento ao estado e retorna o novo estado
     static Estado aplicarMovimento(const Estado& s, char mov) {
         Estado r = s;
 
@@ -110,42 +137,14 @@ struct Estado {
                 r.ori[5] = (s.ori[1] + 1) % 3;
                 r.ori[4] = (s.ori[5] + 2) % 3;
                 break;
-
             default:
-                // movimento inválido, mantém o estado
                 break;
         }
-
         return r;
     }
 };
 
-struct RGB {
-    float r, g, b; // entre 0.0 e 1.0
-};
-
-enum class Color {
-    None,
-    White, Yellow,
-    Green, Blue,
-    Orange, Red
-};
-
-inline RGB colorToRGB(Color c) {
-    switch (c) {
-        case Color::White:  return {1.0f, 1.0f, 1.0f};
-        case Color::Yellow: return {1.0f, 1.0f, 0.0f};
-        case Color::Red:    return {1.0f, 0.0f, 0.0f};
-        case Color::Orange: return {1.0f, 0.5f, 0.0f};
-        case Color::Blue:   return {0.0f, 0.0f, 1.0f};
-        case Color::Green:  return {0.0f, 1.0f, 0.0f};
-        case Color::None:   return {0.1f, 0.1f, 0.1f}; // cinza escuro para "sem cor"
-    }
-    return {0.0f, 0.0f, 0.0f}; // fallback
-}
-
-
-enum Face { F=0, B=1, L=2, R=3, U=4, D=5 };
+// --- Constantes de cubos e faces ---
 
 // cores por cubie (0..7) e orientação (0..2), já mapeadas para as faces globais
 static const Color cornerColorsGlobal[8][3][3] = {
@@ -153,48 +152,39 @@ static const Color cornerColorsGlobal[8][3][3] = {
     { {Color::White, Color::Red, Color::Green},   // ori=0
       {Color::Green, Color::White, Color::Red},   // ori=1
       {Color::Red, Color::Green, Color::White} }, // ori=2
-
     // UFL
     { {Color::White, Color::Green, Color::Orange},
       {Color::Orange, Color::White, Color::Green},
       {Color::Green, Color::Orange, Color::White} },
-
     // UBL
     { {Color::White, Color::Orange, Color::Blue},
       {Color::Blue, Color::White, Color::Orange},
       {Color::Orange, Color::Blue, Color::White} },
-
     // UBR
     { {Color::White, Color::Blue, Color::Red},
       {Color::Red, Color::White, Color::Blue},
       {Color::Blue, Color::Red, Color::White} },
-
     // DFR
     { {Color::Yellow, Color::Green, Color::Red},
       {Color::Red, Color::Yellow, Color::Green},
       {Color::Green, Color::Red, Color::Yellow} },
-
     // DFL
     { {Color::Yellow, Color::Orange, Color::Green},
       {Color::Green, Color::Yellow, Color::Orange},
       {Color::Orange, Color::Green, Color::Yellow} },
-
     // DBL
     { {Color::Yellow, Color::Blue, Color::Orange},
       {Color::Orange, Color::Yellow, Color::Blue},
       {Color::Blue, Color::Orange, Color::Yellow} },
-
     // DRB
     { {Color::Yellow, Color::Red, Color::Blue},
       {Color::Blue, Color::Yellow, Color::Red},
       {Color::Red, Color::Blue, Color::Yellow} }
 };
 
-
-// 1) Faces-base por POSIÇÃO global (ori=0 nessa posição).
-// Ordem dos eixos: [UD, RL, FB]  -> quais FACES globais recebem cada eixo quando ori=0.
+// Define as faces globais associadas a cada posição (0..7)
 static const std::array<std::array<Face,3>,8> POS_BASE_FACES = {{
-    /* UFR */ {U,R,F}, // UFR
+    {U,R,F}, // UFR
     {U,F,L}, // UFL
     {U,L,B}, // UBL
     {U,B,R}, // UBR
@@ -203,25 +193,6 @@ static const std::array<std::array<Face,3>,8> POS_BASE_FACES = {{
     {D,B,L}, // DBL
     {D,R,B}  // DBR
 }};
-
-// 2) Cores-base por PEÇA (na ordem [UD, RL, FB]) quando a peça está no seu lugar resolvido.
-static const std::array<std::array<Color,3>,8> PIECE_BASE_COLORS = {{
-    /* peça UFR */ {{ Color::White,  Color::Red,    Color::Green }},
-    /* peça UFL */ {{ Color::White,  Color::Orange, Color::Green }},
-    /* peça UBL */ {{ Color::White,  Color::Orange, Color::Blue  }},
-    /* peça UBR */ {{ Color::White,  Color::Red,    Color::Blue  }},
-    /* peça DFR */ {{ Color::Yellow, Color::Red,    Color::Green }},
-    /* peça DFL */ {{ Color::Yellow, Color::Orange, Color::Green }},
-    /* peça DBL */ {{ Color::Yellow, Color::Orange, Color::Blue  }},
-    /* peça DRB */ {{ Color::Yellow, Color::Red,    Color::Blue  }},
-}};
-
-// Busca qual PEÇA está em uma posição global (0..6). Retorna -1 se não achou.
-static int findPieceAtPos(const Estado& e, int pos) {
-    for (int piece = 0; piece < 7; ++piece)
-        if (e.pos[piece] == pos) return piece;
-    return -1;
-}
 
 // Definição das cores básicas de cada canto no estado resolvido
 // ordem: {marcador U/D, lateral1, lateral2}
@@ -236,6 +207,16 @@ static const std::array<std::array<Color, 3>, 8> cornerBase = {{
     { Color::Yellow, Color::Red, Color::Blue}      // 7: DBR
 }};
 
+// --- Funções utilitárias de cubo ---
+
+// Busca qual PEÇA está em uma posição global (0..6). Retorna -1 se não achou.
+inline int findPieceAtPos(const Estado& e, int pos) {
+    for (int piece = 0; piece < 7; ++piece)
+        if (e.pos[piece] == pos) return piece;
+    return -1;
+}
+
+// Retorna as cores do cubie rotacionadas conforme a orientação
 inline std::array<Color,3> getCornerColors(int cubieId, int ori) {
     std::array<Color,3> base = cornerBase[cubieId];
     std::array<Color,3> rotated;
@@ -245,33 +226,24 @@ inline std::array<Color,3> getCornerColors(int cubieId, int ori) {
     return rotated;
 }
 
-
-std::array<std::array<Color,6>,8> getColorsForState(const Estado& estado) {
+// Retorna as cores dos stickers para cada face global de cada cubie
+inline std::array<std::array<Color,6>,8> getStickersForState(const Estado& estado) {
     std::array<std::array<Color,6>,8> out;
-
     for (int pos=0; pos<8; pos++) {
-        int cubieId = estado.pos[pos];  // qual peça está aqui
-        int ori     = estado.ori[pos];  // orientação dela
-        auto colors = getCornerColors(cubieId, ori);
-
-        // inicia com "vazio"
         out[pos].fill(Color::None);
-
-        // aplica nos lados globais certos
-        for (int pos=0; pos<7; pos++) {
-            int cubieId = estado.pos[pos];
-            int ori     = estado.ori[pos];
-            out[pos].fill(Color::None);
-            for (int k=0;k<3;k++){
-                Face f = POS_BASE_FACES[pos][k];
-                out[pos][f] = cornerColorsGlobal[cubieId][ori][k];
-            }
-        }
-        for (int l=0;l<3;l++){
-            Face f = POS_BASE_FACES[7][l];
-            out[7][f] = PIECE_BASE_COLORS[7][l];
+    }
+    for (int pos=0; pos<7; pos++) {
+        int cubieId = estado.pos[pos];
+        int ori     = estado.ori[pos];
+        for (int k=0; k<3; k++) {
+            Face f = POS_BASE_FACES[pos][k];
+            out[pos][f] = cornerColorsGlobal[cubieId][ori][k];
         }
     }
-
+    // DBR (posição 7) sempre tem as cores base
+    for (int l=0; l<3; l++) {
+        Face f = POS_BASE_FACES[7][l];
+        out[7][f] = cornerBase[7][l];
+    }
     return out;
 }

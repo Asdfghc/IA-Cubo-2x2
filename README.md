@@ -1,9 +1,12 @@
-Compilar: `g++ src/main.cpp -Iinclude -o build/main -lGL -lGLU -lglut`
+# Principal
+Compilar: `g++ src/*.cpp -Iinclude -o build/main -lGL -lGLU -lglut`
+
 Rodar: `./build/main`
 
 
-Para teste do solver:
-Compilar: `g++ src/solver.cpp -Iinclude -o build/solver`
+# Para teste do solver:
+Compilar: `g++ src/solver.cpp -DSOLVER_STANDALONE -Iinclude -o build/solver`
+
 Rodar: `./build/solver`
 
 
