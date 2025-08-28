@@ -10,6 +10,14 @@ Compilar: `g++ src/solver.cpp -DSOLVER_STANDALONE -Iinclude -o build/solver`
 Rodar: `./build/solver`
 
 
+# TODOs:
+- dfs
+- a*
+- ida*?
+- ui
+- animações?
+
+
 # Testes:
 ### Com set de explorados:
 Tempo de execução: 2.606 segundos
