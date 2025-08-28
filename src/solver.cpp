@@ -69,6 +69,8 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
             // Não permite 3 movimentos iguais seguidos
             if (atual->pai && atual->movimento == movimento && atual->pai->movimento == movimento)
                 continue;
+            if (atual->movimento == movimento && (movimento == 'u' || movimento == 'l' || movimento == 'f'))
+                continue;
             
             Estado proximo = Estado::aplicarMovimento(atual->estado, movimento);
             No* novo = new No{proximo, movimento, atual};
