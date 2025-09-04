@@ -8,6 +8,7 @@ Rodar: `./build/solver`
 <br/>
 # TODOs:
 - dfs
+- a* com peças juntas?
 - ida* com LUT completa?
 - two-fase alghorithm?
 ---

@@ -3,6 +3,7 @@
 #include <vector>
 #include "cube_state.h"
 #include <iostream>
+#include <string>
 #include "solver.h"
 
 using namespace std;
@@ -12,6 +13,8 @@ float angle_horizontal = 0.0f;
 float angle_vertical = 0.0f;
 array<array<Color, 6>, 8> stickers;
 Estado estado;
+vector<char> caminho;
+string overlay_message = "";
 
 // --- Funções utilitárias de desenho ---
 
@@ -103,6 +106,35 @@ void display() {
         drawCubie(positions[i][0], positions[i][1], positions[i][2], stickers[i]);
     }
 
+    // --- Desenha mensagem de overlay (texto 2D) ---
+    if (!overlay_message.empty()) {
+        // Salva as matrizes atuais
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        gluOrtho2D(0, viewport[2], 0, viewport[3]);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        // Define cor do texto (vermelho)
+        glColor3f(1.0f, 0.0f, 0.0f);
+        // Posição: canto superior esquerdo
+        float x = 10.0f;
+        float y = viewport[3] - 30.0f;
+        glRasterPos2f(x, y);
+        for (const char* c = overlay_message.c_str(); *c != '\0'; ++c) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        }
+
+        // Restaura as matrizes
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+    }
     glutSwapBuffers();
 }
 
@@ -138,11 +170,18 @@ void keyboard(int key, int x, int y) {
     glutPostRedisplay();
 }
 
+void renderBitmapString(float x, float y, void *font, const char *string) {
+    glRasterPos2f(x, y); // Set the raster position for drawing
+    for (const char* c = string; *c != '\0'; ++c) {
+        glutBitmapCharacter(font, *c); // Draw each character
+    }
+}
+
 // Callback para teclas normais (letras)
 void keyboardChar(unsigned char key, int x, int y) {
     if (key == 13) {
         Estado estado_inicial = estado;
-        vector<char> caminho;
+        caminho.clear();
         
         bool achou = solve_bfs(estado_inicial, caminho);
         if (achou) {
@@ -150,10 +189,19 @@ void keyboardChar(unsigned char key, int x, int y) {
             for (char mov : caminho) {
                 cout << mov << " ";
             }
+            overlay_message = "Solucao encontrada: " + string(caminho.begin(), caminho.end());
         } else {
             cout << "nao achou";
+            overlay_message = "Solucao não encontrada.";
         }
         cout << endl;
+    } else {
+        if (overlay_message.front() == key) {
+            overlay_message.erase(overlay_message.begin());
+        } else if (!overlay_message.empty() && overlay_message.back() != '*') {
+            overlay_message.push_back('*');
+            
+        }
     }
     estado = Estado::aplicarMovimento(estado, key);
     stickers = getStickersForState(estado);
