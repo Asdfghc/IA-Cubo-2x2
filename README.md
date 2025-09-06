@@ -8,7 +8,9 @@ Rodar: `./build/solver`
 <br/>
 # TODOs:
 - dfs
-- a* com peças juntas?
+- a* com heurística perfeita com ruído
+- bfs com set de explorados (hash)?
+- bilateral bfs?
 - ida* com LUT completa?
 - two-fase alghorithm?
 ---

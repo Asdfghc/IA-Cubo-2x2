@@ -196,9 +196,7 @@ void keyboardChar(unsigned char key, int x, int y) {
         }
         cout << endl;
     } else {
-        if (overlay_message.front() == key) {
-            overlay_message.erase(overlay_message.begin());
-        } else if (!overlay_message.empty() && overlay_message.back() != '*') {
+        if (!overlay_message.empty() && overlay_message.back() != '*') {
             overlay_message.push_back('*');
             
         }
