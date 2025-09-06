@@ -7,11 +7,11 @@ Rodar: `./build/solver`
 <br/>
 <br/>
 # TODOs:
-- dfs
+- melhorar dfs
 - a* com heurística perfeita com ruído
-- bfs com set de explorados (hash)?
-- bilateral bfs?
 - ida* com LUT completa?
+- set de explorados (hash)?
+- bilateral bfs?
 - two-fase alghorithm?
 ---
 - ui
