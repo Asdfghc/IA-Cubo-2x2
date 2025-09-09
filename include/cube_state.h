@@ -1,11 +1,10 @@
 #pragma once
-
 #include <array>
-#include <iostream>
-#include <map>
+#include <cstdint>
 
-const char movimentos[] = {'U', 'u', 'L', 'l', 'F', 'f'};
+// --- Constantes de movimentos ---
 
+constexpr char movimentos[] = {'U', 'u', 'L', 'l', 'F', 'f'};
 inline char movimentos_inversos(char mov) {
     switch(mov) {
         case 'U': return 'u';
@@ -18,60 +17,23 @@ inline char movimentos_inversos(char mov) {
     }
 }
 
+// --- Estrutura do estado do cubo ---
 
-// Estado empacotado em um único inteiro (até 32 bits)
 struct Estado {
-    // 7 posições (0..6) cada uma cabe em 3 bits: 21 bits
-    // 7 orientações (0..2) cada uma cabe em 2 bits: 14 bits
-    // Total: 35 bits, mas como não há permutação repetida, pode-se usar 32 bits para aplicações práticas
-    // Aqui, para simplicidade, usamos dois campos, mas ambos são compactados
-    uint32_t packed_pos; // 21 bits usados
-    uint16_t packed_ori; // 14 bits usados
+    std::array<uint8_t,7> pos; // cubie em cada posição global 0..6 (sem o 7 = DRB)
+    std::array<uint8_t,7> ori; // orientação (0,1,2)
 
-    Estado() : packed_pos(0), packed_ori(0) {}
-
-    Estado(const std::array<uint8_t,7>& pos, const std::array<uint8_t,7>& ori) : packed_pos(0), packed_ori(0) {
-        for (int i = 0; i < 7; ++i) {
-            packed_pos |= (pos[i] & 0x7) << (3*i);
-            packed_ori |= (ori[i] & 0x3) << (2*i);
-        }
+    bool operator==(const Estado& rhs) const {
+        return pos == rhs.pos && ori == rhs.ori;
     }
 
-    std::array<uint8_t,7> get_pos() const {
-        std::array<uint8_t,7> pos{};
-        for (int i = 0; i < 7; ++i) {
-            pos[i] = (packed_pos >> (3*i)) & 0x7;
-        }
-        return pos;
+    bool operator<(const Estado& rhs) const {
+        return pos != rhs.pos || ori != rhs.ori;
     }
 
-    std::array<uint8_t,7> get_ori() const {
-        std::array<uint8_t,7> ori{};
-        for (int i = 0; i < 7; ++i) {
-            ori[i] = (packed_ori >> (2*i)) & 0x3;
-        }
-        return ori;
-    }
-
-    inline void print() const {
-        auto pos = get_pos();
-        auto ori = get_ori();
-        for(int i=0; i<7; i++) {
-            std::cout << "pos[" << i << "] = " << int(pos[i]) << ", ori[" << i << "] = " << int(ori[i]) << "\n";
-        }
-    }
-
-    inline bool operator==(const Estado& rhs) const {
-        return packed_pos == rhs.packed_pos && packed_ori == rhs.packed_ori;
-    }
-
-    inline bool operator<(const Estado& rhs) const {
-        return packed_pos < rhs.packed_pos || (packed_pos == rhs.packed_pos && packed_ori < rhs.packed_ori);
-    }
-
-    inline static Estado aplicarMovimento(const Estado& s, char mov) {
-        auto pos = s.get_pos();
-        auto ori = s.get_ori();
+    // Aplica um movimento ao estado e retorna o novo estado
+    static Estado aplicarMovimento(const Estado& s, char mov) {
+        Estado r = s;
 
         switch(mov) {
             case 'U': {
@@ -151,10 +113,9 @@ struct Estado {
                 ori[5] = (t4 + 1) % 3;
                 ori[1] = (t1 + 2) % 3;
                 break;
-            }
             default:
                 break;
         }
-        return Estado(pos, ori);
+        return r;
     }
 };

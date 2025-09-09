@@ -1,74 +1,233 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <GL/glut.h>
+#include <cmath>
+#include <vector>
+#include "cube_state.h"
 #include "cube_renderer.h"
 #include <iostream>
+#include <string>
+#include "solver.h"
 
-int main() {
-    if(!glfwInit()){ std::cerr<<"Falha em GLFW\n"; return -1;}
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow* window = glfwCreateWindow(800,600,"Cubo 3D",NULL,NULL);
-    if(!window){ std::cerr<<"Falha ao criar janela\n"; glfwTerminate(); return -1;}
-    glfwMakeContextCurrent(window);
+using namespace std;
 
-    glewExperimental = GL_TRUE;
-    if(glewInit()!=GLEW_OK){ std::cerr<<"Falha em GLEW\n"; return -1;}
+// Variáveis globais para controle de rotação e estado do cubo
+float angle_horizontal = 0.0f;
+float angle_vertical = 0.0f;
+array<array<Color, 6>, 8> stickers;
+Estado estado;
+vector<char> caminho;
+string overlay_message = "";
+
+// --- Funções utilitárias de desenho ---
+
+// Desenha um cubinho individual na posição (x, y, z) com as cores dos stickers
+void drawCubie(float x, float y, float z, const array<Color, 6>& stickers) {
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    glBegin(GL_QUADS);
+
+    // Frente
+    RGB frontColor = colorToRGB(stickers[0]);
+    glColor3f(frontColor.r, frontColor.g, frontColor.b);
+    glVertex3f(-0.5, -0.5, 0.5);
+    glVertex3f( 0.5, -0.5, 0.5);
+    glVertex3f( 0.5,  0.5, 0.5);
+    glVertex3f(-0.5,  0.5, 0.5);
+
+    // Trás
+    RGB backColor = colorToRGB(stickers[1]);
+    glColor3f(backColor.r, backColor.g, backColor.b);
+    glVertex3f(-0.5, -0.5, -0.5);
+    glVertex3f(-0.5,  0.5, -0.5);
+    glVertex3f( 0.5,  0.5, -0.5);
+    glVertex3f( 0.5, -0.5, -0.5);
+
+    // Esquerda
+    RGB leftColor = colorToRGB(stickers[2]);
+    glColor3f(leftColor.r, leftColor.g, leftColor.b);
+    glVertex3f(-0.5, -0.5, -0.5);
+    glVertex3f(-0.5, -0.5,  0.5);
+    glVertex3f(-0.5,  0.5,  0.5);
+    glVertex3f(-0.5,  0.5, -0.5);
+
+    // Direita
+    RGB rightColor = colorToRGB(stickers[3]);
+    glColor3f(rightColor.r, rightColor.g, rightColor.b);
+    glVertex3f(0.5, -0.5, -0.5);
+    glVertex3f(0.5,  0.5, -0.5);
+    glVertex3f(0.5,  0.5,  0.5);
+    glVertex3f(0.5, -0.5,  0.5);
+
+    // Topo
+    RGB topColor = colorToRGB(stickers[4]);
+    glColor3f(topColor.r, topColor.g, topColor.b);
+    glVertex3f(-0.5, 0.5, -0.5);
+    glVertex3f(-0.5, 0.5,  0.5);
+    glVertex3f( 0.5, 0.5,  0.5);
+    glVertex3f( 0.5, 0.5, -0.5);
+
+    // Fundo
+    RGB bottomColor = colorToRGB(stickers[5]);
+    glColor3f(bottomColor.r, bottomColor.g, bottomColor.b);
+    glVertex3f(-0.5, -0.5, -0.5);
+    glVertex3f( 0.5, -0.5, -0.5);
+    glVertex3f( 0.5, -0.5,  0.5);
+    glVertex3f(-0.5, -0.5,  0.5);
+
+    glEnd();
+    glPopMatrix();
+}
+
+// --- Funções de callback do GLUT ---
+
+// Função de desenho principal
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // Configura a câmera
+    glTranslatef(0, 0, -6);
+    glRotatef(angle_horizontal, 0, 1, 0);
+    float rad_v = angle_horizontal * M_PI / 180.0f;
+    glRotatef(angle_vertical, -cos(rad_v), 0, -sin(rad_v));
+
+    // Desenha os 8 cubinhos (2x2x2)
+    const float offset = 0.52f; // distância entre centros dos cubinhos
+    const float positions[8][3] = {
+        { offset,  offset,  offset},
+        {-offset,  offset,  offset},
+        {-offset,  offset, -offset},
+        { offset,  offset, -offset},
+        { offset, -offset,  offset},
+        {-offset, -offset,  offset},
+        {-offset, -offset, -offset},
+        { offset, -offset, -offset}
+    };
+    for (int i = 0; i < 8; i++) {
+        drawCubie(positions[i][0], positions[i][1], positions[i][2], stickers[i]);
+    }
+
+    // --- Desenha mensagem de overlay (texto 2D) ---
+    if (!overlay_message.empty()) {
+        // Salva as matrizes atuais
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        gluOrtho2D(0, viewport[2], 0, viewport[3]);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        // Define cor do texto (vermelho)
+        glColor3f(1.0f, 0.0f, 0.0f);
+        // Posição: canto superior esquerdo
+        float x = 10.0f;
+        float y = viewport[3] - 30.0f;
+        glRasterPos2f(x, y);
+        for (const char* c = overlay_message.c_str(); *c != '\0'; ++c) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        }
+
+        // Restaura as matrizes
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+    }
+    glutSwapBuffers();
+}
+
+// Função chamada ao redimensionar a janela
+void reshape(int w, int h) {
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, (double)w / h, 1.0, 100.0);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+// Callback para teclas especiais (setas)
+void keyboard(int key, int x, int y) {
+    switch (key) {
+        case GLUT_KEY_LEFT:
+            angle_horizontal -= 10.0f;
+            if (angle_horizontal < 0) angle_horizontal += 360;
+            break;
+        case GLUT_KEY_RIGHT:
+            angle_horizontal += 10.0f;
+            if (angle_horizontal > 360) angle_horizontal -= 360;
+            break;
+        case GLUT_KEY_DOWN:
+            angle_vertical -= 10.0f;
+            if (angle_vertical < 0) angle_vertical += 360;
+            break;
+        case GLUT_KEY_UP:
+            angle_vertical += 10.0f;
+            if (angle_vertical > 360) angle_vertical -= 360;
+            break;
+    }
+    glutPostRedisplay();
+}
+
+void renderBitmapString(float x, float y, void *font, const char *string) {
+    glRasterPos2f(x, y); // Set the raster position for drawing
+    for (const char* c = string; *c != '\0'; ++c) {
+        glutBitmapCharacter(font, *c); // Draw each character
+    }
+}
+
+// Callback para teclas normais (letras)
+void keyboardChar(unsigned char key, int x, int y) {
+    if (key == 13) {
+        Estado estado_inicial = estado;
+        caminho.clear();
+        
+        bool achou = solve_bfs(estado_inicial, caminho);
+        if (achou) {
+            cout << "achou: ";
+            for (char mov : caminho) {
+                cout << mov << " ";
+            }
+            overlay_message = "Solucao encontrada: " + string(caminho.begin(), caminho.end());
+        } else {
+            cout << "nao achou";
+            overlay_message = "Solucao não encontrada.";
+        }
+        cout << endl;
+    } else {
+        if (!overlay_message.empty() && overlay_message.back() != '*') {
+            overlay_message.push_back('*');
+            
+        }
+    }
+    estado = Estado::aplicarMovimento(estado, key);
+    stickers = getStickersForState(estado);
+    glutPostRedisplay();
+}
+
+// --- Função principal ---
+
+int main(int argc, char** argv) {
+    // Estado inicial do cubo
+    estado = {{0,1,2,3,4,5,6}, {0,0,0,0,0,0,0}};
+    stickers = getStickersForState(estado);
+
+    // Inicialização do GLUT e OpenGL
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(600, 600);
+    glutCreateWindow("Cubo Magico 2x2");
 
     glEnable(GL_DEPTH_TEST);
 
-    CubeRenderer renderer;
-    //CubeState state;
+    // Registra callbacks
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutSpecialFunc(keyboard);
+    glutKeyboardFunc(keyboardChar);
 
-    // Cria os cubies do cubo 2x2 (8 peças)
-    std::vector<Cubie> cubies;
-    float offset = 0.55f; // distância entre os cubies
-
-    for (int x = -1; x <= 1; x += 2) {
-        for (int y = -1; y <= 1; y += 2) {
-            for (int z = -1; z <= 1; z += 2) {
-                Cubie c;
-                c.position = glm::vec3(x * offset, y * offset, z * offset);
-                c.colors = {
-                    glm::vec3(1.0f,0.0f,0.0f),   // face 0: vermelho
-                    glm::vec3(0.0f,1.0f,0.0f),   // face 1: verde
-                    glm::vec3(0.0f,0.0f,1.0f),   // face 2: azul
-                    glm::vec3(1.0f,1.0f,0.0f),   // face 3: amarelo
-                    glm::vec3(1.0f,0.0f,1.0f),   // face 4: magenta
-                    glm::vec3(0.0f,1.0f,1.0f)    // face 5: ciano
-                };
-                cubies.push_back(c);
-            }
-        }
-    }
-    renderer.setCubies(cubies);
-
-    while(!glfwWindowShouldClose(window)) {
-        glClearColor(0.1f,0.1f,0.1f,1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-         glm::mat4 view = glm::lookAt(
-            glm::vec3(3, 3, 5),  // posição da câmera
-            glm::vec3(0, 0, 0),  // olha para o centro
-            glm::vec3(0, 1, 0)   // up
-        );
-        glm::mat4 projection = glm::perspective(
-            glm::radians(45.0f),
-            800.0f / 600.0f,
-            0.1f,
-            100.0f
-        );
-
-        renderer.draw(view,projection);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    glutMainLoop();
     return 0;
 }

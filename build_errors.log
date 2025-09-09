@@ -1,0 +1,69 @@
+src/main.cpp:14:13: error: ‘Color’ was not declared in this scope
+   14 | array<array<Color, 6>, 8> stickers;
+      |             ^~~~~
+src/main.cpp:14:21: error: template argument 1 is invalid
+   14 | array<array<Color, 6>, 8> stickers;
+      |                     ^
+src/main.cpp:14:25: error: template argument 1 is invalid
+   14 | array<array<Color, 6>, 8> stickers;
+      |                         ^
+src/main.cpp:22:55: error: ‘Color’ was not declared in this scope
+   22 | void drawCubie(float x, float y, float z, const array<Color, 6>& stickers) {
+      |                                                       ^~~~~
+src/main.cpp:22:63: error: template argument 1 is invalid
+   22 | void drawCubie(float x, float y, float z, const array<Color, 6>& stickers) {
+      |                                                               ^
+src/main.cpp: In function ‘void drawCubie(float, float, float, const int&)’:
+src/main.cpp:28:5: error: ‘RGB’ was not declared in this scope
+   28 |     RGB frontColor = colorToRGB(stickers[0]);
+      |     ^~~
+src/main.cpp:29:15: error: ‘frontColor’ was not declared in this scope
+   29 |     glColor3f(frontColor.r, frontColor.g, frontColor.b);
+      |               ^~~~~~~~~~
+src/main.cpp:36:8: error: expected ‘;’ before ‘backColor’
+   36 |     RGB backColor = colorToRGB(stickers[1]);
+      |        ^~~~~~~~~~
+      |        ;
+src/main.cpp:37:15: error: ‘backColor’ was not declared in this scope
+   37 |     glColor3f(backColor.r, backColor.g, backColor.b);
+      |               ^~~~~~~~~
+src/main.cpp:44:8: error: expected ‘;’ before ‘leftColor’
+   44 |     RGB leftColor = colorToRGB(stickers[2]);
+      |        ^~~~~~~~~~
+      |        ;
+src/main.cpp:45:15: error: ‘leftColor’ was not declared in this scope
+   45 |     glColor3f(leftColor.r, leftColor.g, leftColor.b);
+      |               ^~~~~~~~~
+src/main.cpp:52:8: error: expected ‘;’ before ‘rightColor’
+   52 |     RGB rightColor = colorToRGB(stickers[3]);
+      |        ^~~~~~~~~~~
+      |        ;
+src/main.cpp:53:15: error: ‘rightColor’ was not declared in this scope
+   53 |     glColor3f(rightColor.r, rightColor.g, rightColor.b);
+      |               ^~~~~~~~~~
+src/main.cpp:60:8: error: expected ‘;’ before ‘topColor’
+   60 |     RGB topColor = colorToRGB(stickers[4]);
+      |        ^~~~~~~~~
+      |        ;
+src/main.cpp:61:15: error: ‘topColor’ was not declared in this scope
+   61 |     glColor3f(topColor.r, topColor.g, topColor.b);
+      |               ^~~~~~~~
+src/main.cpp:68:8: error: expected ‘;’ before ‘bottomColor’
+   68 |     RGB bottomColor = colorToRGB(stickers[5]);
+      |        ^~~~~~~~~~~~
+      |        ;
+src/main.cpp:69:15: error: ‘bottomColor’ was not declared in this scope
+   69 |     glColor3f(bottomColor.r, bottomColor.g, bottomColor.b);
+      |               ^~~~~~~~~~~
+src/main.cpp: In function ‘void display()’:
+src/main.cpp:106:78: error: invalid types ‘int[int]’ for array subscript
+  106 |         drawCubie(positions[i][0], positions[i][1], positions[i][2], stickers[i]);
+      |                                                                              ^
+src/main.cpp: In function ‘void keyboardChar(unsigned char, int, int)’:
+src/main.cpp:205:16: error: ‘getStickersForState’ was not declared in this scope
+  205 |     stickers = getStickersForState(estado);
+      |                ^~~~~~~~~~~~~~~~~~~
+src/main.cpp: In function ‘int main(int, char**)’:
+src/main.cpp:214:16: error: ‘getStickersForState’ was not declared in this scope
+  214 |     stickers = getStickersForState(estado);
+      |                ^~~~~~~~~~~~~~~~~~~
