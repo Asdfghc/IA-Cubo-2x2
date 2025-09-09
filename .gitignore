@@ -1,4 +1,4 @@
 **/output
 .vscode
 build
-build_erros.log
+build_errors.log

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 #include "cube_state.h"
+#include "cube_renderer.h"
 #include <iostream>
 #include <string>
 #include "solver.h"
