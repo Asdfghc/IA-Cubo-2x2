@@ -5,6 +5,7 @@
 #include <stack>
 #include <set>
 #include <algorithm>
+#include <unordered_set>
 #include "cube_state.h"
 
 using namespace std;
@@ -20,7 +21,7 @@ const EstadoCodificado final = {0, 0};
 // Retorna true se achou solução, false se não achou
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
 bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho) {
-    int explorados = 0;
+    unordered_set<uint32_t> visitados;
     auto now = chrono::system_clock::now();
 
     queue<No*> Estrutura;
@@ -29,6 +30,7 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
     No* inicial = new No{estado_inicial, Movimento::None, nullptr};
     Estrutura.push(inicial);
     todos_nos.push_back(inicial);
+    visitados.insert(packState(estado_inicial.oriCoord, estado_inicial.permCoord)); // Marca inicial como visitado
 
     bool achou = false;
     while (!Estrutura.empty()) {
@@ -51,12 +53,9 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
 
             float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
             cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
-            cout << "Nº de estados explorados: " << explorados << endl;
+            cout << "Nº de estados explorados: " << visitados.size() << endl;
             break;
-            
         }
-
-        explorados++;
 
         // Limita profundidade
         if (atual->profundidade >= 14) {
@@ -74,8 +73,14 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
             // Não permite dois movimentos anti-horários iguais seguidos
             if (atual->movimento == movimento && (movimento == Movimento::u || movimento == Movimento::l || movimento == Movimento::f))
                 continue;
-            
+
             EstadoCodificado proximo = EstadoCodificado::aplicarMovimento(atual->estado, movimento);
+            
+            uint32_t key = packState(proximo.oriCoord, proximo.permCoord);
+
+            if (visitados.count(key)) continue;
+
+            visitados.insert(key);
             No* novo = new No{proximo, movimento, atual, static_cast<uint8_t>(atual->profundidade + 1)};
             Estrutura.push(novo);
             todos_nos.push_back(novo);
@@ -90,7 +95,7 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
 // Retorna true se achou solução, false se não achou
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
 bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho) {
-    int explorados = 0;
+    int visitados = 0;
     auto now = chrono::system_clock::now();
 
     stack<No*> Estrutura;
@@ -121,12 +126,10 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
 
             float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
             cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
-            cout << "Nº de estados explorados: " << explorados << endl;
+            cout << "Nº de estados explorados: " << visitados << endl;
             break; // TODO: Buscar mais de uma solução
             
         }
-
-        explorados++;
 
         // Limita profundidade
         if (atual->profundidade >= 14) {
@@ -148,6 +151,10 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
                 continue;
             
             EstadoCodificado proximo = EstadoCodificado::aplicarMovimento(atual->estado, movimento);
+            
+            uint32_t key = packState(proximo.oriCoord, proximo.permCoord);
+
+            visitados++;
             No* novo = new No{proximo, movimento, atual, static_cast<uint8_t>(atual->profundidade + 1)};
             Estrutura.push(novo);
             todos_nos.push_back(novo);

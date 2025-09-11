@@ -109,7 +109,7 @@ struct EstadoDecodificado {
 // --- Conversões orientação ---
 uint16_t oriToCoord(const std::array<uint8_t,8>& ori) {
     int coord = 0;
-    for (int i = 6; i >= 0; i--) {
+    for (int i = 5; i >= 0; i--) {
         coord = coord * 3 + ori[i];
     }
     return coord;

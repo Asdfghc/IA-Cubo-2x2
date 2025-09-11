@@ -140,9 +140,6 @@ struct EstadoCodificado {
         return permCoord == rhs.permCoord && oriCoord == rhs.oriCoord;
     }
 
-    bool operator<(const EstadoCodificado& rhs) const {
-        return permCoord != rhs.permCoord || oriCoord != rhs.oriCoord;
-    }
 
     // Aplica um movimento ao estado e retorna o novo estado
     static EstadoCodificado aplicarMovimento(const EstadoCodificado& s, Movimento mov) {
@@ -164,4 +161,8 @@ inline void carregarTabelas() {
     f2.close();
 
     std::cout << "Tabelas carregadas!" << std::endl;
+}
+
+inline uint32_t packState(uint16_t ori, uint16_t perm) {
+    return (static_cast<uint32_t>(ori) << 13) | (perm & 0x1FFFu);
 }
