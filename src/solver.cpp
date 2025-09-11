@@ -10,23 +10,23 @@
 using namespace std;
 
 struct No {
-    Estado estado;
-    char movimento;
+    EstadoCodificado estado;
+    Movimento movimento;
     No *pai;
     uint8_t profundidade;
 };
 
-const Estado final = {{0,1,2,3,4,5,6}, {0,0,0,0,0,0,0}};
+const EstadoCodificado final = {0, 0};
 // Retorna true se achou solução, false se não achou
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
-bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
+bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho) {
     int explorados = 0;
     auto now = chrono::system_clock::now();
 
     queue<No*> Estrutura;
     vector<No*> todos_nos;
 
-    No* inicial = new No{estado_inicial, '\0', nullptr};
+    No* inicial = new No{estado_inicial, Movimento::None, nullptr};
     Estrutura.push(inicial);
     todos_nos.push_back(inicial);
 
@@ -58,20 +58,25 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
 
         explorados++;
 
+        // Limita profundidade
+        if (atual->profundidade >= 14) {
+            continue;
+        }
+
         // Gerar próximos estados
-        for (char movimento : movimentos) {
+        for (Movimento movimento : movimentos) {
             // Não permite movimento inverso do anterior
-            if (atual->movimento != '\0' && movimento == movimentos_inversos(atual->movimento))
+            if (atual->pai && movimento == movimentos_inversos(atual->movimento))
                 continue;
             // Não permite 3 movimentos iguais seguidos
             if (atual->pai && atual->movimento == movimento && atual->pai->movimento == movimento)
                 continue;
             // Não permite dois movimentos anti-horários iguais seguidos
-            if (atual->movimento == movimento && (movimento == 'u' || movimento == 'l' || movimento == 'f'))
+            if (atual->movimento == movimento && (movimento == Movimento::u || movimento == Movimento::l || movimento == Movimento::f))
                 continue;
             
-            Estado proximo = Estado::aplicarMovimento(atual->estado, movimento);
-            No* novo = new No{proximo, movimento, atual};
+            EstadoCodificado proximo = EstadoCodificado::aplicarMovimento(atual->estado, movimento);
+            No* novo = new No{proximo, movimento, atual, static_cast<uint8_t>(atual->profundidade + 1)};
             Estrutura.push(novo);
             todos_nos.push_back(novo);
         }
@@ -84,14 +89,14 @@ bool solve_bfs(const Estado& estado_inicial, vector<char>& caminho) {
 
 // Retorna true se achou solução, false se não achou
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
-bool solve_dfs(const Estado& estado_inicial, vector<char>& caminho) {
+bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho) {
     int explorados = 0;
     auto now = chrono::system_clock::now();
 
     stack<No*> Estrutura;
     vector<No*> todos_nos;
 
-    No* inicial = new No{estado_inicial, '\0', nullptr};
+    No* inicial = new No{estado_inicial, Movimento::None, nullptr};
     Estrutura.push(inicial);
     todos_nos.push_back(inicial);
 
@@ -131,18 +136,18 @@ bool solve_dfs(const Estado& estado_inicial, vector<char>& caminho) {
         // TODO: Liberar memória de nós não mais necessários
 
         // Gerar próximos estados
-        for (char movimento : movimentos) {
+        for (Movimento movimento : movimentos) {
             // Não permite movimento inverso do anterior
-            if (atual->movimento != '\0' && movimento == movimentos_inversos(atual->movimento))
+            if (atual->pai && movimento == movimentos_inversos(atual->movimento))
                 continue;
             // Não permite 3 movimentos iguais seguidos
             if (atual->pai && atual->movimento == movimento && atual->pai->movimento == movimento)
                 continue;
             // Não permite dois movimentos anti-horários iguais seguidos
-            if (atual->movimento == movimento && (movimento == 'u' || movimento == 'l' || movimento == 'f'))
+            if (atual->movimento == movimento && (movimento == Movimento::u || movimento == Movimento::l || movimento == Movimento::f))
                 continue;
             
-            Estado proximo = Estado::aplicarMovimento(atual->estado, movimento);
+            EstadoCodificado proximo = EstadoCodificado::aplicarMovimento(atual->estado, movimento);
             No* novo = new No{proximo, movimento, atual, static_cast<uint8_t>(atual->profundidade + 1)};
             Estrutura.push(novo);
             todos_nos.push_back(novo);
@@ -157,19 +162,22 @@ bool solve_dfs(const Estado& estado_inicial, vector<char>& caminho) {
 #ifdef SOLVER_STANDALONE
 // main para teste standalone
 int main() {
-    Estado estado_inicial = {{2,3,1,4,0,5,6}, {1,2,0,0,2,0,1}};
-    vector<char> caminho;
+    carregarTabelas();
     
-    bool achou = solve_dfs(estado_inicial, caminho);
+    EstadoCodificado estado_inicial = {500, 1494};
+    vector<Movimento> caminho;
+    
+    bool achou = solve_bfs(estado_inicial, caminho);
     if (achou) {
         cout << "achou: ";
-        for (char mov : caminho) {
-            cout << mov << " ";
+        for (Movimento mov : caminho) {
+            cout << movimento_to_char(mov) << " ";
         }
     } else {
         cout << "nao achou";
     }
     cout << endl;
+    
     return 0;
 }
 #endif

@@ -1,121 +1,167 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <fstream>
+#include <iostream>
 
 // --- Constantes de movimentos ---
 
-constexpr char movimentos[] = {'U', 'u', 'L', 'l', 'F', 'f'};
-inline char movimentos_inversos(char mov) {
+enum class Movimento : unsigned char {
+    U=0, u=1, L=2, l=3, F=4, f=5, None=6
+};
+
+constexpr Movimento movimentos[] = {Movimento::U, Movimento::u, Movimento::L, Movimento::l, Movimento::F, Movimento::f};
+inline Movimento movimentos_inversos(Movimento mov) {
     switch(mov) {
-        case 'U': return 'u';
-        case 'u': return 'U';
-        case 'L': return 'l';
-        case 'l': return 'L';
-        case 'F': return 'f';
-        case 'f': return 'F';
+        case Movimento::U: return Movimento::u;
+        case Movimento::u: return Movimento::U;
+        case Movimento::L: return Movimento::l;
+        case Movimento::l: return Movimento::L;
+        case Movimento::F: return Movimento::f;
+        case Movimento::f: return Movimento::F;
         default: return mov;
     }
 }
 
-// --- Estrutura do estado do cubo ---
-
-struct Estado {
-    std::array<uint8_t,7> pos; // cubie em cada posição global 0..6 (sem o 7 = DRB)
-    std::array<uint8_t,7> ori; // orientação (0,1,2)
-
-    bool operator==(const Estado& rhs) const {
-        return pos == rhs.pos && ori == rhs.ori;
+inline char movimento_to_char(Movimento mov) {
+    switch(mov) {
+        case Movimento::U: return 'U';
+        case Movimento::u: return 'u';
+        case Movimento::L: return 'L';
+        case Movimento::l: return 'l';
+        case Movimento::F: return 'F';
+        case Movimento::f: return 'f';
+        default: return '?';
     }
+}
 
-    bool operator<(const Estado& rhs) const {
-        return pos != rhs.pos || ori != rhs.ori;
-    }
+// --- Estrutura do estado decodificado (para manipulação) ---
 
-    // Aplica um movimento ao estado e retorna o novo estado
-    static Estado aplicarMovimento(const Estado& s, char mov) {
-        Estado r = s;
+// --- Estado decodificado (para pré-computação) ---
+struct EstadoDecodificado {
+    std::array<uint8_t,8> pos; // permutação das 7 peças (DRB é implícita)
+    std::array<uint8_t,8> ori; // orientações (DRB é implícita)
+
+    static EstadoDecodificado aplicarMovimento(const EstadoDecodificado& s, Movimento mov) {
+        EstadoDecodificado r = s;
 
         switch(mov) {
-            case 'U': {
-                uint8_t tmp = pos[0];
-                pos[0] = pos[3];
-                pos[3] = pos[2];
-                pos[2] = pos[1];
-                pos[1] = tmp;
-                tmp = ori[0];
-                ori[0] = ori[3];
-                ori[3] = ori[2];
-                ori[2] = ori[1];
-                ori[1] = tmp;
+            case Movimento::U: // U
+                r.pos[0] = s.pos[3];
+                r.pos[1] = s.pos[0];
+                r.pos[2] = s.pos[1];
+                r.pos[3] = s.pos[2];
+
+                r.ori[0] = s.ori[3];
+                r.ori[1] = s.ori[0];
+                r.ori[2] = s.ori[1];
+                r.ori[3] = s.ori[2];
                 break;
-            }
-            case 'u': {
-                uint8_t tmp = pos[0];
-                pos[0] = pos[1];
-                pos[1] = pos[2];
-                pos[2] = pos[3];
-                pos[3] = tmp;
-                tmp = ori[0];
-                ori[0] = ori[1];
-                ori[1] = ori[2];
-                ori[2] = ori[3];
-                ori[3] = tmp;
+
+            case Movimento::u: // U'
+                r.pos[0] = s.pos[1];
+                r.pos[1] = s.pos[2];
+                r.pos[2] = s.pos[3];
+                r.pos[3] = s.pos[0];
+
+                r.ori[0] = s.ori[1];
+                r.ori[1] = s.ori[2];
+                r.ori[2] = s.ori[3];
+                r.ori[3] = s.ori[0];
                 break;
-            }
-            case 'L': {
-                uint8_t tmp = pos[1];
-                pos[1] = pos[2];
-                pos[2] = pos[6];
-                pos[6] = pos[5];
-                pos[5] = tmp;
-                uint8_t t1 = ori[1], t2 = ori[2], t3 = ori[6], t4 = ori[5];
-                ori[1] = (t2 + 1) % 3;
-                ori[2] = (t3 + 2) % 3;
-                ori[6] = (t4 + 1) % 3;
-                ori[5] = (t1 + 2) % 3;
+
+            case Movimento::L: // L
+                r.pos[1] = s.pos[2];
+                r.pos[2] = s.pos[6];
+                r.pos[6] = s.pos[5];
+                r.pos[5] = s.pos[1];
+
+                r.ori[1] = (s.ori[2] + 1) % 3;
+                r.ori[2] = (s.ori[6] + 2) % 3;
+                r.ori[6] = (s.ori[5] + 1) % 3;
+                r.ori[5] = (s.ori[1] + 2) % 3;
                 break;
-            }
-            case 'l': {
-                uint8_t tmp = pos[1];
-                pos[1] = pos[5];
-                pos[5] = pos[6];
-                pos[6] = pos[2];
-                pos[2] = tmp;
-                uint8_t t1 = ori[1], t2 = ori[5], t3 = ori[6], t4 = ori[2];
-                ori[1] = (t2 + 1) % 3;
-                ori[5] = (t3 + 2) % 3;
-                ori[6] = (t4 + 1) % 3;
-                ori[2] = (t1 + 2) % 3;
+
+            case Movimento::l: // L'
+                r.pos[1] = s.pos[5];
+                r.pos[2] = s.pos[1];
+                r.pos[6] = s.pos[2];
+                r.pos[5] = s.pos[6];
+
+                r.ori[1] = (s.ori[5] + 1) % 3;
+                r.ori[2] = (s.ori[1] + 2) % 3;
+                r.ori[6] = (s.ori[2] + 1) % 3;
+                r.ori[5] = (s.ori[6] + 2) % 3;
                 break;
-            }
-            case 'F': {
-                uint8_t tmp = pos[0];
-                pos[0] = pos[1];
-                pos[1] = pos[5];
-                pos[5] = pos[4];
-                pos[4] = tmp;
-                uint8_t t1 = ori[0], t2 = ori[1], t3 = ori[5], t4 = ori[4];
-                ori[0] = (t2 + 1) % 3;
-                ori[1] = (t3 + 2) % 3;
-                ori[5] = (t4 + 1) % 3;
-                ori[4] = (t1 + 2) % 3;
+
+            case Movimento::F: // F
+                r.pos[0] = s.pos[1];
+                r.pos[1] = s.pos[5];
+                r.pos[5] = s.pos[4];
+                r.pos[4] = s.pos[0];
+
+                r.ori[0] = (s.ori[1] + 1) % 3;
+                r.ori[1] = (s.ori[5] + 2) % 3;
+                r.ori[5] = (s.ori[4] + 1) % 3;
+                r.ori[4] = (s.ori[0] + 2) % 3;
                 break;
-            }
-            case 'f': {
-                uint8_t tmp = pos[0];
-                pos[0] = pos[4];
-                pos[4] = pos[5];
-                pos[5] = pos[1];
-                pos[1] = tmp;
-                uint8_t t1 = ori[0], t2 = ori[4], t3 = ori[5], t4 = ori[1];
-                ori[0] = (t2 + 1) % 3;
-                ori[4] = (t3 + 2) % 3;
-                ori[5] = (t4 + 1) % 3;
-                ori[1] = (t1 + 2) % 3;
-                break;
-            default:
+
+            case Movimento::f: // F'
+                r.pos[0] = s.pos[4];
+                r.pos[1] = s.pos[0];
+                r.pos[5] = s.pos[1];
+                r.pos[4] = s.pos[5];
+
+                r.ori[0] = (s.ori[4] + 1) % 3;
+                r.ori[1] = (s.ori[0] + 2) % 3;
+                r.ori[5] = (s.ori[1] + 1) % 3;
+                r.ori[4] = (s.ori[5] + 2) % 3;
                 break;
         }
         return r;
     }
 };
+
+// --- Estrutura do estado do cubo ---
+
+constexpr int N_ORI  = 729;  // 3^7
+constexpr int N_PERM = 5040;  // 7!
+constexpr int N_MOV  = 6;     // U, u, L, l, F, f
+
+// Tabelas carregadas na memória
+static uint16_t oriMove[N_ORI][N_MOV];
+static uint16_t permMove[N_PERM][N_MOV];
+
+struct EstadoCodificado {
+    uint16_t oriCoord;   // 0..729 (3^6 - 1)
+    uint16_t permCoord;  // 0..5039 (7! - 1)
+
+    bool operator==(const EstadoCodificado& rhs) const {
+        return permCoord == rhs.permCoord && oriCoord == rhs.oriCoord;
+    }
+
+    bool operator<(const EstadoCodificado& rhs) const {
+        return permCoord != rhs.permCoord || oriCoord != rhs.oriCoord;
+    }
+
+    // Aplica um movimento ao estado e retorna o novo estado
+    static EstadoCodificado aplicarMovimento(const EstadoCodificado& s, Movimento mov) {
+        EstadoCodificado r;
+        r.oriCoord = oriMove[s.oriCoord][static_cast<uint8_t>(mov)];
+        r.permCoord = permMove[s.permCoord][static_cast<uint8_t>(mov)];
+        return r;
+    }
+};
+
+// Função para carregar tabelas do disco
+inline void carregarTabelas() {
+    std::ifstream f1("tables/oriMove.bin", std::ios::binary);
+    f1.read((char*)oriMove, sizeof(oriMove));
+    f1.close();
+
+    std::ifstream f2("tables/permMove.bin", std::ios::binary);
+    f2.read((char*)permMove, sizeof(permMove));
+    f2.close();
+
+    std::cout << "Tabelas carregadas!" << std::endl;
+}

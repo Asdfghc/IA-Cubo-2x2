@@ -13,7 +13,7 @@ using namespace std;
 float angle_horizontal = 0.0f;
 float angle_vertical = 0.0f;
 array<array<Color, 6>, 8> stickers;
-Estado estado;
+EstadoDecodificado estado;
 vector<char> caminho;
 string overlay_message = "";
 
@@ -181,10 +181,26 @@ void renderBitmapString(float x, float y, void *font, const char *string) {
 // Callback para teclas normais (letras)
 void keyboardChar(unsigned char key, int x, int y) {
     if (key == 13) {
-        Estado estado_inicial = estado;
+        EstadoDecodificado estado_inicial = estado;
         caminho.clear();
         
-        bool achou = solve_bfs(estado_inicial, caminho);
+        // TODO: MELHORAR!!!!
+        uint16_t orien = 0;
+        for (int i = 6; i >= 0; i--) {
+            orien = orien * 3 + estado_inicial.ori[i];
+        }
+        
+        uint16_t coord = 0;
+        int fact = 1;
+        for (int i = 0; i < 7; i++) {
+            int smaller = 0;
+            for (int j = i+1; j < 7; j++) {
+                if (estado_inicial.pos[j] < estado_inicial.pos[i]) smaller++;
+            }
+            coord = coord * (7 - i) + smaller;
+        }
+
+        bool achou = solve_bfs(EstadoCodificado{coord, orien}, caminho);
         if (achou) {
             cout << "achou: ";
             for (char mov : caminho) {
@@ -196,13 +212,24 @@ void keyboardChar(unsigned char key, int x, int y) {
             overlay_message = "Solucao não encontrada.";
         }
         cout << endl;
+    } else if (key == 'U') {
+        estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::U);
+    } else if (key == 'u') {
+        estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::u);
+    } else if (key == 'L') {
+        estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::L);
+    } else if (key == 'l') {
+        estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::l);
+    } else if (key == 'F') {
+        estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::F);
+    } else if (key == 'f') {
+        estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::f);
     } else {
         if (!overlay_message.empty() && overlay_message.back() != '*') {
             overlay_message.push_back('*');
             
         }
     }
-    estado = Estado::aplicarMovimento(estado, key);
     stickers = getStickersForState(estado);
     glutPostRedisplay();
 }
@@ -210,6 +237,7 @@ void keyboardChar(unsigned char key, int x, int y) {
 // --- Função principal ---
 
 int main(int argc, char** argv) {
+    carregarTabelas();
     // Estado inicial do cubo
     estado = {{0,1,2,3,4,5,6}, {0,0,0,0,0,0,0}};
     stickers = getStickersForState(estado);

@@ -1,9 +1,12 @@
 # Principal
 Compilar: `g++ src/*.cpp -Iinclude -o build/main -lGL -lGLU -lglut`\
-Rodar: `./build/main`
+Rodar: `./build/main`  
 # Para teste do solver:
 Compilar: `g++ src/solver.cpp -DSOLVER_STANDALONE -Iinclude -o build/solver`\
-Rodar: `./build/solver`
+Rodar: `./build/solver`  
+# Precomputação da tabela de movimentos:
+Compilar: `g++ precompute/precompute_moves.cpp -Iinclude -o build/precompute_moves`\
+Rodar: `./build/precompute_moves`
 <br/>
 <br/>
 # TODOs:

@@ -15,7 +15,7 @@ struct RGB {
     float r, g, b;
 };
 
-enum Face { F=0, B=1, L=2, R=3, U=4, D=5 };
+enum class Face { F=0, B=1, L=2, R=3, U=4, D=5 };
 
 // --- Funções utilitárias de cor ---
 
@@ -73,14 +73,14 @@ static const Color cornerColorsGlobal[8][3][3] = {
 
 // Define as faces globais associadas a cada posição (0..7)
 static const std::array<std::array<Face,3>,8> POS_BASE_FACES = {{
-    {U,R,F}, // UFR
-    {U,F,L}, // UFL
-    {U,L,B}, // UBL
-    {U,B,R}, // UBR
-    {D,F,R}, // DFR
-    {D,L,F}, // DFL
-    {D,B,L}, // DBL
-    {D,R,B}  // DBR
+    {Face::U,Face::R,Face::F}, // UFR
+    {Face::U,Face::F,Face::L}, // UFL
+    {Face::U,Face::L,Face::B}, // UBL
+    {Face::U,Face::B,Face::R}, // UBR
+    {Face::D,Face::F,Face::R}, // DFR
+    {Face::D,Face::L,Face::F}, // DFL
+    {Face::D,Face::B,Face::L}, // DBL
+    {Face::D,Face::R,Face::B}  // DBR
 }};
 
 // Definição das cores básicas de cada canto no estado resolvido
@@ -99,7 +99,7 @@ static const std::array<std::array<Color, 3>, 8> cornerBase = {{
 // --- Funções utilitárias de cubo ---
 
 // Busca qual PEÇA está em uma posição global (0..6). Retorna -1 se não achou.
-inline int findPieceAtPos(const Estado& e, int pos) {
+inline int findPieceAtPos(const EstadoDecodificado& e, int pos) {
     for (int piece = 0; piece < 7; ++piece)
         if (e.pos[piece] == pos) return piece;
     return -1;
@@ -116,7 +116,7 @@ inline std::array<Color,3> getCornerColors(int cubieId, int ori) {
 }
 
 // Retorna as cores dos stickers para cada face global de cada cubie
-inline std::array<std::array<Color,6>,8> getStickersForState(const Estado& estado) {
+inline std::array<std::array<Color,6>,8> getStickersForState(const EstadoDecodificado& estado) {
     std::array<std::array<Color,6>,8> out;
     for (int pos=0; pos<8; pos++) {
         out[pos].fill(Color::None);
@@ -126,13 +126,13 @@ inline std::array<std::array<Color,6>,8> getStickersForState(const Estado& estad
         int ori     = estado.ori[pos];
         for (int k=0; k<3; k++) {
             Face f = POS_BASE_FACES[pos][k];
-            out[pos][f] = cornerColorsGlobal[cubieId][ori][k];
+            out[pos][static_cast<int>(f)] = cornerColorsGlobal[cubieId][ori][k];
         }
     }
     // DBR (posição 7) sempre tem as cores base
     for (int l=0; l<3; l++) {
         Face f = POS_BASE_FACES[7][l];
-        out[7][f] = cornerBase[7][l];
+        out[7][static_cast<int>(f)] = cornerBase[7][l];
     }
     return out;
 }
