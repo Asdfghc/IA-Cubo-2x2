@@ -37,6 +37,12 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
         No* atual = Estrutura.front();
         Estrutura.pop();
 
+        // TODO: Melhorar print de progresso
+        /*if (Estrutura.size() % 1000 == 1) {
+            cout << "Estados na fila: " << Estrutura.size() << ", visitados: " << visitados.size() << "\r";
+            cout.flush();
+        }*/
+
         if (atual->estado == final) {
             // Reconstruir caminho
             vector<No*> caminho_nos;
@@ -65,7 +71,7 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
         // Gerar próximos estados
         for (Movimento movimento : movimentos) {
             // Não permite movimento inverso do anterior
-            if (atual->pai && movimento == movimentos_inversos(atual->movimento))
+            if (movimento == movimentos_inversos(atual->movimento))
                 continue;
             // Não permite 3 movimentos iguais seguidos
             if (atual->pai && atual->movimento == movimento && atual->pai->movimento == movimento)
@@ -171,7 +177,7 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
 int main() {
     carregarTabelas();
     
-    EstadoCodificado estado_inicial = {500, 1494};
+    EstadoCodificado estado_inicial = {412, 224};
     vector<Movimento> caminho;
     
     bool achou = solve_bfs(estado_inicial, caminho);

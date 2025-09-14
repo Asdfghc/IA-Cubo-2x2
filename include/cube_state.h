@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 // --- Constantes de movimentos ---
 
@@ -117,6 +118,9 @@ struct EstadoDecodificado {
                 r.ori[5] = (s.ori[1] + 1) % 3;
                 r.ori[4] = (s.ori[5] + 2) % 3;
                 break;
+                
+            default:
+                break;
         }
         return r;
     }
@@ -129,8 +133,12 @@ constexpr int N_PERM = 5040;  // 7!
 constexpr int N_MOV  = 6;     // U, u, L, l, F, f
 
 // Tabelas carregadas na memória
-static uint16_t oriMove[N_ORI][N_MOV];
-static uint16_t permMove[N_PERM][N_MOV];
+extern uint16_t oriMove[N_ORI][N_MOV];
+extern uint16_t permMove[N_PERM][N_MOV];
+
+// Funções do cubo
+void carregarTabelas();
+uint32_t packState(uint16_t ori, uint16_t perm);
 
 struct EstadoCodificado {
     uint16_t oriCoord;   // 0..729 (3^6 - 1)
@@ -140,7 +148,6 @@ struct EstadoCodificado {
         return permCoord == rhs.permCoord && oriCoord == rhs.oriCoord;
     }
 
-
     // Aplica um movimento ao estado e retorna o novo estado
     static EstadoCodificado aplicarMovimento(const EstadoCodificado& s, Movimento mov) {
         EstadoCodificado r;
@@ -148,21 +155,58 @@ struct EstadoCodificado {
         r.permCoord = permMove[s.permCoord][static_cast<uint8_t>(mov)];
         return r;
     }
+
+    // --- Conversões orientação ---
+    static uint16_t oriToCoord(const std::array<uint8_t,8>& ori) {
+        int coord = 0;
+        for (int i = 0; i < 6; i++) {
+            coord = coord * 3 + ori[i];
+        }
+        return coord;
+    }
+
+    static std::array<uint8_t,8> coordToOri(uint16_t coord) {
+        std::array<uint8_t,8> ori{};
+        int sum = 0;
+        for (int i = 5; i >= 0; i--) {
+            ori[i] = coord % 3;
+            sum += ori[i];
+            coord /= 3;
+        }
+        ori[6] = (3 - (sum % 3)) % 3; // DLB deduzido
+        ori[7] = 0; // DRB implícito
+        return ori;
+    }
+
+    // --- Conversões permutação (Lehmer code) ---
+    static uint16_t permToCoord(const std::array<uint8_t,8>& pos) {
+        uint16_t coord = 0;
+        int fact = 1;
+        for (int i = 0; i < 7; i++) {
+            int smaller = 0;
+            for (int j = i+1; j < 7; j++) {
+                if (pos[j] < pos[i]) smaller++;
+            }
+            coord = coord * (7 - i) + smaller;
+        }
+        return coord;
+    }
+
+
+    static std::array<uint8_t,8> coordToPerm(uint16_t coord) {
+        std::array<uint8_t,8> pos{};
+        std::vector<int> elems = {0,1,2,3,4,5,6,7};
+
+        for (int i = 0; i < 7; i++) {
+            int fact = 1;
+            for (int k = 2; k <= 6 - i; k++) fact *= k;  // (7-i)! 
+            int idx = coord / fact;
+            coord %= fact;
+            pos[i] = elems[idx];
+            elems.erase(elems.begin() + idx);
+        }
+        pos[7] = elems[0]; // DRB implícito
+        return pos;
+    }
+
 };
-
-// Função para carregar tabelas do disco
-inline void carregarTabelas() {
-    std::ifstream f1("tables/oriMove.bin", std::ios::binary);
-    f1.read((char*)oriMove, sizeof(oriMove));
-    f1.close();
-
-    std::ifstream f2("tables/permMove.bin", std::ios::binary);
-    f2.read((char*)permMove, sizeof(permMove));
-    f2.close();
-
-    std::cout << "Tabelas carregadas!" << std::endl;
-}
-
-inline uint32_t packState(uint16_t ori, uint16_t perm) {
-    return (static_cast<uint32_t>(ori) << 13) | (perm & 0x1FFFu);
-}

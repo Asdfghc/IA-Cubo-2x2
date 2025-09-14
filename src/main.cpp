@@ -14,7 +14,7 @@ float angle_horizontal = 0.0f;
 float angle_vertical = 0.0f;
 array<array<Color, 6>, 8> stickers;
 EstadoDecodificado estado;
-vector<char> caminho;
+vector<Movimento> caminho;
 string overlay_message = "";
 
 // --- Funções utilitárias de desenho ---
@@ -183,30 +183,29 @@ void keyboardChar(unsigned char key, int x, int y) {
     if (key == 13) {
         EstadoDecodificado estado_inicial = estado;
         caminho.clear();
-        
-        // TODO: MELHORAR!!!!
-        uint16_t orien = 0;
-        for (int i = 6; i >= 0; i--) {
-            orien = orien * 3 + estado_inicial.ori[i];
-        }
-        
-        uint16_t coord = 0;
-        int fact = 1;
-        for (int i = 0; i < 7; i++) {
-            int smaller = 0;
-            for (int j = i+1; j < 7; j++) {
-                if (estado_inicial.pos[j] < estado_inicial.pos[i]) smaller++;
-            }
-            coord = coord * (7 - i) + smaller;
-        }
 
-        bool achou = solve_bfs(EstadoCodificado{coord, orien}, caminho);
+        EstadoCodificado codificado;
+        
+        /*
+        cout << static_cast<int>(estado_inicial.ori[0]) << static_cast<int>(estado_inicial.ori[1]) << static_cast<int>(estado_inicial.ori[2]) << static_cast<int>(estado_inicial.ori[3]) << static_cast<int>(estado_inicial.ori[4]) << static_cast<int>(estado_inicial.ori[5]) << static_cast<int>(estado_inicial.ori[6]) << static_cast<int>(estado_inicial.ori[7]) << " ";
+        cout << static_cast<int>(estado_inicial.pos[0]) << static_cast<int>(estado_inicial.pos[1]) << static_cast<int>(estado_inicial.pos[2]) << static_cast<int>(estado_inicial.pos[3]) << static_cast<int>(estado_inicial.pos[4]) << static_cast<int>(estado_inicial.pos[5]) << static_cast<int>(estado_inicial.pos[6]) << static_cast<int>(estado_inicial.pos[7]) << endl;
+
+        codificado.oriCoord = EstadoCodificado().oriToCoord(estado_inicial.ori);
+        codificado.permCoord = EstadoCodificado().permToCoord(estado_inicial.pos);
+        cout << codificado.oriCoord << " " << codificado.permCoord << endl;
+        */
+
+        bool achou = solve_dfs(codificado, caminho);
         if (achou) {
             cout << "achou: ";
-            for (char mov : caminho) {
-                cout << mov << " ";
+            for (Movimento mov : caminho) {
+                cout << movimento_to_char(mov) << " ";
             }
-            overlay_message = "Solucao encontrada: " + string(caminho.begin(), caminho.end());
+            overlay_message = "Solucao encontrada: ";
+            for (Movimento mov : caminho) {
+                overlay_message += movimento_to_char(mov);
+                overlay_message += ' ';
+            }
         } else {
             cout << "nao achou";
             overlay_message = "Solucao não encontrada.";
@@ -239,7 +238,7 @@ void keyboardChar(unsigned char key, int x, int y) {
 int main(int argc, char** argv) {
     carregarTabelas();
     // Estado inicial do cubo
-    estado = {{0,1,2,3,4,5,6}, {0,0,0,0,0,0,0}};
+    estado = {{0,1,2,3,4,5,6,7}, {0,0,0,0,0,0,0,0}};
     stickers = getStickersForState(estado);
 
     // Inicialização do GLUT e OpenGL
