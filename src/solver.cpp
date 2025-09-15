@@ -157,8 +157,6 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
                 continue;
             
             EstadoCodificado proximo = EstadoCodificado::aplicarMovimento(atual->estado, movimento);
-            
-            uint32_t key = packState(proximo.oriCoord, proximo.permCoord);
 
             visitados++;
             No* novo = new No{proximo, movimento, atual, static_cast<uint8_t>(atual->profundidade + 1)};
@@ -180,7 +178,7 @@ int main() {
     EstadoCodificado estado_inicial = {412, 224};
     vector<Movimento> caminho;
     
-    bool achou = solve_bfs(estado_inicial, caminho);
+    bool achou = solve_dfs(estado_inicial, caminho);
     if (achou) {
         cout << "achou: ";
         for (Movimento mov : caminho) {

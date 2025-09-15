@@ -185,17 +185,10 @@ void keyboardChar(unsigned char key, int x, int y) {
         caminho.clear();
 
         EstadoCodificado codificado;
-        
-        /*
-        cout << static_cast<int>(estado_inicial.ori[0]) << static_cast<int>(estado_inicial.ori[1]) << static_cast<int>(estado_inicial.ori[2]) << static_cast<int>(estado_inicial.ori[3]) << static_cast<int>(estado_inicial.ori[4]) << static_cast<int>(estado_inicial.ori[5]) << static_cast<int>(estado_inicial.ori[6]) << static_cast<int>(estado_inicial.ori[7]) << " ";
-        cout << static_cast<int>(estado_inicial.pos[0]) << static_cast<int>(estado_inicial.pos[1]) << static_cast<int>(estado_inicial.pos[2]) << static_cast<int>(estado_inicial.pos[3]) << static_cast<int>(estado_inicial.pos[4]) << static_cast<int>(estado_inicial.pos[5]) << static_cast<int>(estado_inicial.pos[6]) << static_cast<int>(estado_inicial.pos[7]) << endl;
-
         codificado.oriCoord = EstadoCodificado().oriToCoord(estado_inicial.ori);
         codificado.permCoord = EstadoCodificado().permToCoord(estado_inicial.pos);
-        cout << codificado.oriCoord << " " << codificado.permCoord << endl;
-        */
 
-        bool achou = solve_dfs(codificado, caminho);
+        bool achou = solve_bfs(codificado, caminho);
         if (achou) {
             cout << "achou: ";
             for (Movimento mov : caminho) {

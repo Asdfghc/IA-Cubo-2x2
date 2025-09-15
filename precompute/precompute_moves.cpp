@@ -7,7 +7,7 @@
 #include "cube_state.h"
 
 // --- Pré-computação das move tables ---
-void gerarMoveTables() {
+int main() {
     // Orientações
     for (int i = 0; i < N_ORI; i++) {
         EstadoDecodificado s;
@@ -31,21 +31,14 @@ void gerarMoveTables() {
             permMove[i][m] = EstadoCodificado::permToCoord(r.pos);
         }
     }
-}
 
-// --- Salvar tabelas ---
-void salvarTabelas() {
     std::ofstream f1("tables/oriMove.bin", std::ios::binary);
     f1.write((char*)oriMove, sizeof(oriMove));
     f1.close();
-
+    
     std::ofstream f2("tables/permMove.bin", std::ios::binary);
     f2.write((char*)permMove, sizeof(permMove));
     f2.close();
-}
 
-int main() {
-    gerarMoveTables();
-    salvarTabelas();
     std::cout << "Tabelas geradas e salvas!" << std::endl;
 }

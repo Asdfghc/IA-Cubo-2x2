@@ -20,5 +20,5 @@ void carregarTabelas() {
 }
 
 uint32_t packState(uint16_t ori, uint16_t perm) {
-    return (static_cast<uint32_t>(ori) << 13) | (perm & 0x1FFFu);
+    return (static_cast<uint32_t>(ori) * N_PERM) + perm;
 }

@@ -6,7 +6,10 @@ Compilar: `g++ src/solver.cpp src/cube_state.cpp -DSOLVER_STANDALONE -Iinclude -
 Rodar: `./build/solver`  
 # Precomputação da tabela de movimentos:
 Compilar: `g++ precompute/precompute_moves.cpp src/cube_state.cpp -Iinclude -o build/precompute_moves`\
-Rodar: `./build/precompute_moves`
+Rodar: `./build/precompute_moves`  
+# Precomputação da heurística:
+Compilar: `g++ precompute/precompute_heuristic.cpp src/cube_state.cpp -Iinclude -o build/precompute_heuristic`\
+Rodar: `./build/precompute_heuristic`  
 <br/>
 <br/>
 # TODOs:
