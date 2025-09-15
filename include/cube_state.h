@@ -135,6 +135,7 @@ constexpr int N_MOV  = 6;     // U, u, L, l, F, f
 // Tabelas carregadas na memória
 extern uint16_t oriMove[N_ORI][N_MOV];
 extern uint16_t permMove[N_PERM][N_MOV];
+extern uint8_t heuristic[N_ORI * N_PERM];
 
 // Funções do cubo
 void carregarTabelas();
@@ -208,5 +209,4 @@ struct EstadoCodificado {
         pos[7] = elems[0]; // DRB implícito
         return pos;
     }
-
 };

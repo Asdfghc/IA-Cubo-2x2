@@ -5,6 +5,7 @@
 // Definição das tabelas
 uint16_t oriMove[N_ORI][N_MOV];
 uint16_t permMove[N_PERM][N_MOV];
+uint8_t heuristic[N_ORI * N_PERM];
 
 // Funções
 void carregarTabelas() {
@@ -15,6 +16,10 @@ void carregarTabelas() {
     std::ifstream f2("tables/permMove.bin", std::ios::binary);
     f2.read((char*)permMove, sizeof(permMove));
     f2.close();
+
+    std::ifstream f3("tables/heuristic.bin", std::ios::binary);
+    f3.read((char*)heuristic, sizeof(heuristic));
+    f3.close();
 
     std::cout << "Tabelas carregadas!" << std::endl;
 }
