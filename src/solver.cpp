@@ -32,7 +32,7 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
     auto inicial = make_unique<No>(No{estado_inicial, Movimento::None, nullptr});
     Estrutura.push(inicial.get());
     pool.push_back(move(inicial));
-    visitados.insert(packState(estado_inicial.oriCoord, estado_inicial.permCoord)); // Marca inicial como visitado
+    visitados.insert(EstadoCodificado::packState(estado_inicial.oriCoord, estado_inicial.permCoord)); // Marca inicial como visitado
 
     while (!Estrutura.empty()) {
         No* atual = Estrutura.front();
@@ -77,7 +77,7 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
 
             EstadoCodificado proximo = EstadoCodificado::aplicarMovimento(atual->estado, movimento);
             
-            uint32_t key = packState(proximo.oriCoord, proximo.permCoord);
+            uint32_t key = EstadoCodificado::packState(proximo.oriCoord, proximo.permCoord);
 
             if (visitados.count(key)) continue;
 
@@ -160,8 +160,8 @@ bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, in
     auto now = chrono::system_clock::now();
 
     auto cmp = [&](No* a, No* b) {
-        uint32_t id_a = packState(a->estado.oriCoord, a->estado.permCoord);
-        uint32_t id_b = packState(b->estado.oriCoord, b->estado.permCoord);
+        uint32_t id_a = EstadoCodificado::packState(a->estado.oriCoord, a->estado.permCoord);
+        uint32_t id_b = EstadoCodificado::packState(b->estado.oriCoord, b->estado.permCoord);
 
         uint8_t h_a = heuristic[id_a];
         uint8_t h_b = heuristic[id_b];
@@ -192,7 +192,7 @@ bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, in
         No* atual = pq.top();
         pq.pop();
 
-        uint32_t id = packState(atual->estado.oriCoord, atual->estado.permCoord);
+        uint32_t id = EstadoCodificado::packState(atual->estado.oriCoord, atual->estado.permCoord);
         if (visitados.count(id)) continue;
         visitados.insert(id);
 

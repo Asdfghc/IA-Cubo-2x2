@@ -16,7 +16,7 @@ int main() {
     std::queue<EstadoCodificado> q;
 
     EstadoCodificado resolvido = {0, 0}; // cubo resolvido
-    uint32_t id = packState(resolvido.oriCoord, resolvido.permCoord);
+    uint32_t id = EstadoCodificado::packState(resolvido.oriCoord, resolvido.permCoord);
     dist[id] = 0;
     q.push(resolvido);
 
@@ -24,11 +24,11 @@ int main() {
     while (!q.empty()) {
         EstadoCodificado atual = q.front();
         q.pop();
-        uint8_t d = dist[packState(atual.oriCoord, atual.permCoord)];
+        uint8_t d = dist[EstadoCodificado::packState(atual.oriCoord, atual.permCoord)];
 
         for (int m = 0; m < N_MOV; m++) {
             EstadoCodificado prox = EstadoCodificado::aplicarMovimento(atual, movimentos[m]);
-            uint32_t idp = packState(prox.oriCoord, prox.permCoord);
+            uint32_t idp = EstadoCodificado::packState(prox.oriCoord, prox.permCoord);
             if (dist[idp] == 0xFF) {
                 dist[idp] = d + 1;
                 q.push(prox);
