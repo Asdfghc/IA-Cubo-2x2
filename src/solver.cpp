@@ -174,7 +174,7 @@ bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, in
         }
 
         int f_a = a->profundidade + h_a; // TODO: pesar heurística
-        int f_b = b->profundidade + 1 + h_b;
+        int f_b = b->profundidade + h_b;
 
         return f_a > f_b; // menor f tem prioridade
     };

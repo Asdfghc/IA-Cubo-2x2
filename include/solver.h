@@ -6,4 +6,4 @@
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
 bool solve_bfs(const EstadoCodificado& estado_inicial, std::vector<Movimento>& caminho);
 bool solve_dfs(const EstadoCodificado& estado_inicial, std::vector<Movimento>& caminho);
-bool solve_astar(const EstadoCodificado& estado_inicial, std::vector<Movimento>& caminho);
+bool solve_astar(const EstadoCodificado& estado_inicial, std::vector<Movimento>& caminho, int ruido);
