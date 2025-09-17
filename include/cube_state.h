@@ -27,15 +27,15 @@ inline Movimento movimentos_inversos(Movimento mov) {
     }
 }
 
-inline char movimento_to_char(Movimento mov) {
+inline string movimento_to_str(Movimento mov) {
     switch(mov) {
-        case Movimento::U: return 'U';
-        case Movimento::u: return 'u';
-        case Movimento::L: return 'L';
-        case Movimento::l: return 'l';
-        case Movimento::F: return 'F';
-        case Movimento::f: return 'f';
-        default: return '?';
+        case Movimento::U: return "U";
+        case Movimento::u: return "U'";
+        case Movimento::L: return "L";
+        case Movimento::l: return "L'";
+        case Movimento::F: return "F";
+        case Movimento::f: return "F'";
+        default: return "?";
     }
 }
 
@@ -213,6 +213,8 @@ struct EstadoCodificado {
         return (static_cast<uint32_t>(ori) * N_PERM) + perm;
     }
 };
+
+constexpr EstadoCodificado resolvido = {0, 0};
 
 // Funções do cubo
 void carregarTabelas();

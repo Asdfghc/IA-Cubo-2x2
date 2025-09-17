@@ -14,11 +14,9 @@ float angle_horizontal = 0.0f;
 float angle_vertical = 0.0f;
 array<array<Color, 6>, 8> stickers;
 EstadoDecodificado estado;
-vector<Movimento> caminho;
 string overlay_message = "";
 
-
-// --- Funções de callback do GLUT ---
+// Funções de callback do GLUT
 
 // Função de desenho principal
 void display() {
@@ -48,7 +46,7 @@ void display() {
         drawCubie(positions[i][0], positions[i][1], positions[i][2], stickers[i]);
     }
 
-    // --- Desenha mensagem de overlay (texto 2D) ---
+    // Desenha mensagem de overlay (texto 2D)
     if (!overlay_message.empty()) {
         // Salva as matrizes atuais
         glMatrixMode(GL_PROJECTION);
@@ -115,29 +113,14 @@ void keyboard(int key, int x, int y) {
 // Callback para teclas normais (letras)
 void keyboardChar(unsigned char key, int x, int y) {
     if (key == 13) {
-        EstadoDecodificado estado_inicial = estado;
-        caminho.clear();
-
+        // Converte estado decodificado para codificado
         EstadoCodificado codificado;
-        codificado.oriCoord = EstadoCodificado::oriToCoord(estado_inicial.ori);
-        codificado.permCoord = EstadoCodificado::permToCoord(estado_inicial.pos);
+        codificado.oriCoord = EstadoCodificado::oriToCoord(estado.ori);
+        codificado.permCoord = EstadoCodificado::permToCoord(estado.pos);
 
-        bool achou = solve_astar(codificado, caminho, 0);
-        if (achou) {
-            cout << "achou: ";
-            for (Movimento mov : caminho) {
-                cout << movimento_to_char(mov) << " ";
-            }
-            overlay_message = "Solucao encontrada: ";
-            for (Movimento mov : caminho) {
-                overlay_message += movimento_to_char(mov);
-                overlay_message += ' ';
-            }
-        } else {
-            cout << "nao achou";
-            overlay_message = "Solucao não encontrada.";
-        }
-        cout << endl;
+        // Chama o solver no estado codificado
+        overlay_message = solver_wrapper(codificado, "astar", 0);
+
     } else if (key == 'U') {
         estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::U);
     } else if (key == 'u') {

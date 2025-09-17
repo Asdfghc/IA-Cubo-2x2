@@ -6,6 +6,8 @@
 #include <numeric>
 #include "cube_state.h"
 
+using namespace std;
+
 // --- Pré-computação das move tables ---
 int main() {
     // Orientações
@@ -32,13 +34,14 @@ int main() {
         }
     }
 
-    std::ofstream f1("tables/oriMove.bin", std::ios::binary);
+    // Salva as tabelas em arquivos binários
+    ofstream f1("tables/oriMove.bin", ios::binary);
     f1.write((char*)oriMove, sizeof(oriMove));
     f1.close();
     
-    std::ofstream f2("tables/permMove.bin", std::ios::binary);
+    ofstream f2("tables/permMove.bin", ios::binary);
     f2.write((char*)permMove, sizeof(permMove));
     f2.close();
 
-    std::cout << "Tabelas geradas e salvas!" << std::endl;
+    cout << "Tabelas geradas e salvas!" << endl;
 }

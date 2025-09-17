@@ -1,3 +1,4 @@
+#include <solver.h>
 #include <iostream>
 #include <chrono>
 #include <array>
@@ -18,12 +19,11 @@ struct No {
     uint8_t profundidade;
 };
 
-const EstadoCodificado final = {0, 0};
 // Retorna true se achou solução, false se não achou
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
-bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho) {
+
+bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho, int& n_visitados) {
     unordered_set<uint32_t> visitados;
-    auto now = chrono::system_clock::now();
 
     queue<No*> Estrutura;
     vector<unique_ptr<No>> pool;
@@ -43,17 +43,14 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
             cout.flush();
         }*/
 
-        if (atual->estado == final) {
+        if (atual->estado == resolvido) {
             // Reconstruir caminho
             for (No* n = atual; n->pai != nullptr; n = n->pai) {
                 caminho.push_back(n->movimento);
             }
             reverse(caminho.begin(), caminho.end());
-
-            float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
-            cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
-            cout << "Nº de estados explorados: " << visitados.size() << endl;
             
+            n_visitados = visitados.size();            
             return true;
         }
 
@@ -90,11 +87,8 @@ bool solve_bfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
     return false;
 }
 
-// Retorna true se achou solução, false se não achou
-// O caminho de movimentos é colocado em 'caminho' (vetor de chars)
-bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho) {
-    int visitados = 0;
-    auto now = chrono::system_clock::now();
+bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminho, int& n_visitados) {
+    n_visitados = 0;
 
     stack<No*> Estrutura;
     vector<unique_ptr<No>> pool;
@@ -108,16 +102,12 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
         No* atual = Estrutura.top();
         Estrutura.pop();
 
-        if (atual->estado == final) {
+        if (atual->estado == resolvido) {
             // Reconstruir caminho
             for (No* n = atual; n->pai != nullptr; n = n->pai) {
                 caminho.push_back(n->movimento);
             }
             reverse(caminho.begin(), caminho.end());
-
-            float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
-            cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
-            cout << "Nº de estados explorados: " << visitados << endl;
 
             return true; // TODO: Buscar mais de uma solução
         }
@@ -143,7 +133,7 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
             
             EstadoCodificado proximo = EstadoCodificado::aplicarMovimento(atual->estado, movimento);
 
-            visitados++;
+            n_visitados++;
             auto novo = make_unique<No>(No{proximo, movimento, atual, static_cast<uint8_t>(atual->profundidade + 1)});
             Estrutura.push(novo.get());
             pool.push_back(move(novo));
@@ -153,11 +143,8 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
     return false;
 }
 
-// Retorna true se achou solução, false se não achou
-// O caminho de movimentos é colocado em 'caminho' (vetor de chars)
-bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, int ruido) {
-    auto now = chrono::system_clock::now();
-
+bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, int& n_visitados, int ruido) {
+    // Função de comparação para a priority_queue
     auto cmp = [&](No* a, No* b) {
         uint32_t id_a = EstadoCodificado::packState(a->estado.oriCoord, a->estado.permCoord);
         uint32_t id_b = EstadoCodificado::packState(b->estado.oriCoord, b->estado.permCoord);
@@ -195,17 +182,14 @@ bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, in
         if (visitados.count(id)) continue;
         visitados.insert(id);
 
-        if (atual->estado == final) {
+        if (atual->estado == resolvido) {
             // reconstrói o caminho
             for (No* n = atual; n->pai != nullptr; n = n->pai) {
                 caminho.push_back(n->movimento);
             }
             reverse(caminho.begin(), caminho.end());
 
-            float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
-            cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
-            cout << "Nº de estados explorados: " << visitados.size() << endl;
-
+            n_visitados = visitados.size();
             return true;
         }
 
@@ -218,7 +202,39 @@ bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, in
     }
 
     return false;
-}  
+}
+
+string solver_wrapper(const EstadoCodificado& estado_inicial, const string& metodo, int ruido) {
+    vector<Movimento> caminho;
+    bool achou;
+    
+    int n_visitados;
+    auto now = chrono::system_clock::now();
+
+    if (metodo == "bfs") {
+        achou = solve_bfs(estado_inicial, caminho, n_visitados);
+    } else if (metodo == "dfs") {
+        achou = solve_dfs(estado_inicial, caminho, n_visitados);
+    } else if (metodo == "astar") {
+        achou = solve_astar(estado_inicial, caminho, n_visitados, ruido);
+    } else {
+        return "Método de solução desconhecido";
+    }
+
+    float duration = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - now).count();
+    cout << "Tempo de execução: " << duration/1000 << " segundos" << endl;
+    cout << "Nº de estados explorados: " << n_visitados << endl;
+
+    if (achou) {
+        string result = "Solução encontrada: ";
+        for (Movimento mov : caminho) {
+            result += movimento_to_str(mov) + " ";
+        }
+        return result;
+    } else {
+        return "Solução não encontrada";
+    }
+}
 
 #ifdef SOLVER_STANDALONE
 // main para teste standalone
@@ -226,18 +242,8 @@ int main() {
     carregarTabelas();
     
     EstadoCodificado estado_inicial = {412, 224};
-    vector<Movimento> caminho;
     
-    bool achou = solve_astar(estado_inicial, caminho, 0);
-    if (achou) {
-        cout << "achou: ";
-        for (Movimento mov : caminho) {
-            cout << movimento_to_char(mov) << " ";
-        }
-    } else {
-        cout << "nao achou";
-    }
-    cout << endl;
+    cout << solver_wrapper(estado_inicial, "astar", 0) << endl;
     
     return 0;
 }
