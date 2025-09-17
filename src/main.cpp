@@ -112,13 +112,6 @@ void keyboard(int key, int x, int y) {
     glutPostRedisplay();
 }
 
-void renderBitmapString(float x, float y, void *font, const char *string) {
-    glRasterPos2f(x, y); // Set the raster position for drawing
-    for (const char* c = string; *c != '\0'; ++c) {
-        glutBitmapCharacter(font, *c); // Draw each character
-    }
-}
-
 // Callback para teclas normais (letras)
 void keyboardChar(unsigned char key, int x, int y) {
     if (key == 13) {
@@ -126,8 +119,8 @@ void keyboardChar(unsigned char key, int x, int y) {
         caminho.clear();
 
         EstadoCodificado codificado;
-        codificado.oriCoord = EstadoCodificado().oriToCoord(estado_inicial.ori);
-        codificado.permCoord = EstadoCodificado().permToCoord(estado_inicial.pos);
+        codificado.oriCoord = EstadoCodificado::oriToCoord(estado_inicial.ori);
+        codificado.permCoord = EstadoCodificado::permToCoord(estado_inicial.pos);
 
         bool achou = solve_astar(codificado, caminho, 0);
         if (achou) {
@@ -157,17 +150,11 @@ void keyboardChar(unsigned char key, int x, int y) {
         estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::F);
     } else if (key == 'f') {
         estado = EstadoDecodificado::aplicarMovimento(estado, Movimento::f);
-    } else {
-        if (!overlay_message.empty() && overlay_message.back() != '*') {
-            overlay_message.push_back('*');
-            
-        }
     }
     stickers = getStickersForState(estado);
     glutPostRedisplay();
 }
 
-// --- Função principal ---
 
 int main(int argc, char** argv) {
     carregarTabelas();
@@ -180,7 +167,6 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(600, 600);
     glutCreateWindow("Cubo Magico 2x2");
-
     glEnable(GL_DEPTH_TEST);
 
     // Registra callbacks
@@ -189,6 +175,7 @@ int main(int argc, char** argv) {
     glutSpecialFunc(keyboard);
     glutKeyboardFunc(keyboardChar);
 
+    // Inicia o loop principal
     glutMainLoop();
     return 0;
 }

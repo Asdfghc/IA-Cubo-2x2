@@ -5,13 +5,16 @@
 #include <iostream>
 #include <vector>
 
-// --- Constantes de movimentos ---
+using namespace std;
+
+// Constantes de movimentos
 
 enum class Movimento : unsigned char {
     U=0, u=1, L=2, l=3, F=4, f=5, None=6
 };
 
 constexpr Movimento movimentos[] = {Movimento::U, Movimento::u, Movimento::L, Movimento::l, Movimento::F, Movimento::f};
+
 inline Movimento movimentos_inversos(Movimento mov) {
     switch(mov) {
         case Movimento::U: return Movimento::u;
@@ -36,12 +39,21 @@ inline char movimento_to_char(Movimento mov) {
     }
 }
 
-// --- Estrutura do estado decodificado (para manipulação) ---
+// Definições relacionadas ao cubo 2x2
+constexpr int N_ORI  = 729;  // 3^6
+constexpr int N_PERM = 5040;  // 7!
+constexpr int N_MOV  = 6;     // U, u, L, l, F, f
 
-// --- Estado decodificado (para pré-computação) ---
+// Tabelas carregadas na memória
+extern uint16_t oriMove[N_ORI][N_MOV];
+extern uint16_t permMove[N_PERM][N_MOV];
+extern uint8_t heuristic[N_ORI * N_PERM];
+
+// Estado do cubo em forma decodificada (permutações e orientações explícitas)
+// Usado para renderização e geração da tabela de movimentos
 struct EstadoDecodificado {
-    std::array<uint8_t,8> pos; // permutação das 7 peças (DRB é implícita)
-    std::array<uint8_t,8> ori; // orientações (DRB é implícita)
+    array<uint8_t,8> pos; // permutação das 7 peças (DRB é implícita)
+    array<uint8_t,8> ori; // orientações (DRB é implícita)
 
     static EstadoDecodificado aplicarMovimento(const EstadoDecodificado& s, Movimento mov) {
         EstadoDecodificado r = s;
@@ -126,21 +138,8 @@ struct EstadoDecodificado {
     }
 };
 
-// --- Estrutura do estado do cubo ---
-
-constexpr int N_ORI  = 729;  // 3^7
-constexpr int N_PERM = 5040;  // 7!
-constexpr int N_MOV  = 6;     // U, u, L, l, F, f
-
-// Tabelas carregadas na memória
-extern uint16_t oriMove[N_ORI][N_MOV];
-extern uint16_t permMove[N_PERM][N_MOV];
-extern uint8_t heuristic[N_ORI * N_PERM];
-
-// Funções do cubo
-void carregarTabelas();
-uint32_t packState(uint16_t ori, uint16_t perm);
-
+// Estado do cubo em forma codificada
+// Usado no solver
 struct EstadoCodificado {
     uint16_t oriCoord;   // 0..729 (3^6 - 1)
     uint16_t permCoord;  // 0..5039 (7! - 1)
@@ -158,7 +157,7 @@ struct EstadoCodificado {
     }
 
     // --- Conversões orientação ---
-    static uint16_t oriToCoord(const std::array<uint8_t,8>& ori) {
+    static uint16_t oriToCoord(const array<uint8_t,8>& ori) {
         int coord = 0;
         for (int i = 0; i < 6; i++) {
             coord = coord * 3 + ori[i];
@@ -166,8 +165,8 @@ struct EstadoCodificado {
         return coord;
     }
 
-    static std::array<uint8_t,8> coordToOri(uint16_t coord) {
-        std::array<uint8_t,8> ori{};
+    static array<uint8_t,8> coordToOri(uint16_t coord) {
+        array<uint8_t,8> ori{};
         int sum = 0;
         for (int i = 5; i >= 0; i--) {
             ori[i] = coord % 3;
@@ -180,7 +179,7 @@ struct EstadoCodificado {
     }
 
     // --- Conversões permutação (Lehmer code) ---
-    static uint16_t permToCoord(const std::array<uint8_t,8>& pos) {
+    static uint16_t permToCoord(const array<uint8_t,8>& pos) {
         uint16_t coord = 0;
         int fact = 1;
         for (int i = 0; i < 7; i++) {
@@ -194,9 +193,9 @@ struct EstadoCodificado {
     }
 
 
-    static std::array<uint8_t,8> coordToPerm(uint16_t coord) {
-        std::array<uint8_t,8> pos{};
-        std::vector<int> elems = {0,1,2,3,4,5,6,7};
+    static array<uint8_t,8> coordToPerm(uint16_t coord) {
+        array<uint8_t,8> pos{};
+        vector<int> elems = {0,1,2,3,4,5,6,7};
 
         for (int i = 0; i < 7; i++) {
             int fact = 1;
@@ -214,3 +213,6 @@ struct EstadoCodificado {
         return (static_cast<uint32_t>(ori) * N_PERM) + perm;
     }
 };
+
+// Funções do cubo
+void carregarTabelas();

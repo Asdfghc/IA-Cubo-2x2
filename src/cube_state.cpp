@@ -2,25 +2,26 @@
 #include <fstream>
 #include <iostream>
 
+using namespace std;
+
 // Definição das tabelas
 uint16_t oriMove[N_ORI][N_MOV];
 uint16_t permMove[N_PERM][N_MOV];
 uint8_t heuristic[N_ORI * N_PERM];
 
-// Funções
+// Carrega as tabelas de arquivos binários
 void carregarTabelas() {
-    std::ifstream f1("tables/oriMove.bin", std::ios::binary);
+    ifstream f1("tables/oriMove.bin", ios::binary);
     f1.read((char*)oriMove, sizeof(oriMove));
     f1.close();
 
-    std::ifstream f2("tables/permMove.bin", std::ios::binary);
+    ifstream f2("tables/permMove.bin", ios::binary);
     f2.read((char*)permMove, sizeof(permMove));
     f2.close();
 
-    std::ifstream f3("tables/heuristic.bin", std::ios::binary);
+    ifstream f3("tables/heuristic.bin", ios::binary);
     f3.read((char*)heuristic, sizeof(heuristic));
     f3.close();
 
-    std::cout << "Tabelas carregadas!" << std::endl;
+    cout << "Tabelas carregadas!" << endl;
 }
-

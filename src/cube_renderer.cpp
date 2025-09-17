@@ -1,8 +1,10 @@
 #include "cube_renderer.h"
 #include <GL/glut.h>
 
+using namespace std;
+
 // Desenha um cubinho individual na posição (x, y, z) com as cores dos stickers
-void drawCubie(float x, float y, float z, const std::array<Color, 6>& stickers) {
+void drawCubie(float x, float y, float z, const array<Color, 6>& stickers) {
     glPushMatrix();
     glTranslatef(x, y, z);
     glBegin(GL_QUADS);
@@ -59,22 +61,6 @@ void drawCubie(float x, float y, float z, const std::array<Color, 6>& stickers) 
     glPopMatrix();
 }
 
-
-RGB colorToRGB(Color c) {
-    switch (c) {
-        case Color::White:  return {1.0f, 1.0f, 1.0f};
-        case Color::Yellow: return {1.0f, 1.0f, 0.0f};
-        case Color::Red:    return {1.0f, 0.0f, 0.0f};
-        case Color::Orange: return {1.0f, 0.5f, 0.0f};
-        case Color::Blue:   return {0.0f, 0.0f, 1.0f};
-        case Color::Green:  return {0.0f, 1.0f, 0.0f};
-        case Color::None:   return {0.1f, 0.1f, 0.1f};
-    }
-    return {0.0f, 0.0f, 0.0f};
-}
-
-// --- Funções utilitárias de cubo ---
-
 // Busca qual PEÇA está em uma posição global (0..6). Retorna -1 se não achou.
 int findPieceAtPos(const EstadoDecodificado& e, int pos) {
     for (int piece = 0; piece < 7; ++piece)
@@ -83,9 +69,9 @@ int findPieceAtPos(const EstadoDecodificado& e, int pos) {
 }
 
 // Retorna as cores do cubie rotacionadas conforme a orientação
-std::array<Color,3> getCornerColors(int cubieId, int ori) {
-    std::array<Color,3> base = cornerBase[cubieId];
-    std::array<Color,3> rotated;
+array<Color,3> getCornerColors(int cubieId, int ori) {
+    array<Color,3> base = cornerBase[cubieId];
+    array<Color,3> rotated;
     for(int i=0;i<3;i++){
         rotated[i] = base[(i + ori) % 3];
     }
@@ -93,8 +79,8 @@ std::array<Color,3> getCornerColors(int cubieId, int ori) {
 }
 
 // Retorna as cores dos stickers para cada face global de cada cubie
-std::array<std::array<Color,6>,8> getStickersForState(const EstadoDecodificado& estado) {
-    std::array<std::array<Color,6>,8> out;
+array<array<Color,6>,8> getStickersForState(const EstadoDecodificado& estado) {
+    array<array<Color,6>,8> out;
     for (int pos=0; pos<8; pos++) {
         out[pos].fill(Color::None);
     }

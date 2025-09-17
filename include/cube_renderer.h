@@ -2,7 +2,9 @@
 #include <array>
 #include "cube_state.h"
 
-// --- Enumerações e tipos auxiliares ---
+using namespace std;
+
+// Enumerações e tipos auxiliares
 
 enum class Color {
     None,
@@ -17,9 +19,21 @@ struct RGB {
 
 enum class Face { F=0, B=1, L=2, R=3, U=4, D=5 };
 
+inline RGB colorToRGB(Color c) {
+    switch (c) {
+        case Color::White:  return {1.0f, 1.0f, 1.0f};
+        case Color::Yellow: return {1.0f, 1.0f, 0.0f};
+        case Color::Red:    return {1.0f, 0.0f, 0.0f};
+        case Color::Orange: return {1.0f, 0.5f, 0.0f};
+        case Color::Blue:   return {0.0f, 0.0f, 1.0f};
+        case Color::Green:  return {0.0f, 1.0f, 0.0f};
+        case Color::None:   return {0.1f, 0.1f, 0.1f};
+    }
+    return {0.0f, 0.0f, 0.0f};
+}
 
-// cores por cubie (0..7) e orientação (0..2), já mapeadas para as faces globais
-static const Color cornerColorsGlobal[8][3][3] = {
+// Define as cores globais associadas a cada canto (posição 0..7) e orientação (0..2)
+inline const Color cornerColorsGlobal[8][3][3] = {
     // UFR
     { {Color::White, Color::Red, Color::Green},   // ori=0
       {Color::Green, Color::White, Color::Red},   // ori=1
@@ -55,7 +69,7 @@ static const Color cornerColorsGlobal[8][3][3] = {
 };
 
 // Define as faces globais associadas a cada posição (0..7)
-static const std::array<std::array<Face,3>,8> POS_BASE_FACES = {{
+inline const array<array<Face,3>,8> POS_BASE_FACES = {{
     {Face::U,Face::R,Face::F}, // UFR
     {Face::U,Face::F,Face::L}, // UFL
     {Face::U,Face::L,Face::B}, // UBL
@@ -68,7 +82,7 @@ static const std::array<std::array<Face,3>,8> POS_BASE_FACES = {{
 
 // Definição das cores básicas de cada canto no estado resolvido
 // ordem: {marcador U/D, lateral1, lateral2}
-static const std::array<std::array<Color, 3>, 8> cornerBase = {{
+inline const array<array<Color, 3>, 8> cornerBase = {{
     { Color::White, Color::Red, Color::Green},   // 0: UFR
     { Color::White, Color::Green, Color::Orange}, // 1: UFL
     { Color::White, Color::Orange, Color::Blue},  // 2: UBL
@@ -79,9 +93,8 @@ static const std::array<std::array<Color, 3>, 8> cornerBase = {{
     { Color::Yellow, Color::Red, Color::Blue}      // 7: DBR
 }};
 
-
-void drawCubie(float x, float y, float z, const std::array<Color, 6>& stickers);
-RGB colorToRGB(Color c);
+// Funções principais
+void drawCubie(float x, float y, float z, const array<Color, 6>& stickers);
 int findPieceAtPos(const EstadoDecodificado& e, int pos);
-std::array<Color,3> getCornerColors(int cubieId, int ori);
-std::array<std::array<Color,6>,8> getStickersForState(const EstadoDecodificado& estado);
+array<Color,3> getCornerColors(int cubieId, int ori);
+array<array<Color,6>,8> getStickersForState(const EstadoDecodificado& estado);

@@ -4,16 +4,17 @@
 #include <iostream>
 #include "cube_state.h"
 
-constexpr int TOTAL_STATES = N_ORI * N_PERM;
-static uint8_t dist[TOTAL_STATES]; // distância até o resolvido
+using namespace std;
+
+static uint8_t dist[N_ORI * N_PERM]; // distância até o resolvido
 
 int main() {
     carregarTabelas();
 
     // inicializa todas as distâncias com 0xFF (não visitado)
-    std::fill(std::begin(dist), std::end(dist), 0xFF);
+    fill(begin(dist), end(dist), 0xFF);
 
-    std::queue<EstadoCodificado> q;
+    queue<EstadoCodificado> q;
 
     EstadoCodificado resolvido = {0, 0}; // cubo resolvido
     uint32_t id = EstadoCodificado::packState(resolvido.oriCoord, resolvido.permCoord);
@@ -37,9 +38,9 @@ int main() {
         }
     }
 
-    std::ofstream f("tables/heuristic.bin", std::ios::binary);
+    ofstream f("tables/heuristic.bin", ios::binary);
     f.write((char*)dist, sizeof(dist));
     f.close();
 
-    std::cout << "Heurística gerada. Estados visitados = " << visitados << std::endl;
+    cout << "Heurística gerada. Estados visitados = " << visitados << endl;
 }
