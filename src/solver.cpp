@@ -156,7 +156,7 @@ bool solve_dfs(const EstadoCodificado& estado_inicial, vector<Movimento>& caminh
 
 // Retorna true se achou solução, false se não achou
 // O caminho de movimentos é colocado em 'caminho' (vetor de chars)
-bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho) {
+bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho, int ruido) {
     auto now = chrono::system_clock::now();
 
     auto cmp = [&](No* a, No* b) {
@@ -166,8 +166,15 @@ bool solve_astar(const EstadoCodificado& inicial, vector<Movimento>& caminho) {
         uint8_t h_a = heuristic[id_a];
         uint8_t h_b = heuristic[id_b];
 
-        int f_a = a->profundidade + h_a;
-        int f_b = b->profundidade + h_b;
+            // Adiciona ruído simétrico entre -ruido e +ruido
+            if (ruido > 0) {
+                srand(time(nullptr));
+                h_a += (rand() % (2 * ruido + 1)) - ruido;
+                h_b += (rand() % (2 * ruido + 1)) - ruido;
+        }
+
+        int f_a = a->profundidade + h_a; // TODO: pesar heurística
+        int f_b = b->profundidade + 1 + h_b;
 
         return f_a > f_b; // menor f tem prioridade
     };
@@ -222,7 +229,7 @@ int main() {
     EstadoCodificado estado_inicial = {412, 224};
     vector<Movimento> caminho;
     
-    bool achou = solve_astar(estado_inicial, caminho);
+    bool achou = solve_astar(estado_inicial, caminho, 0);
     if (achou) {
         cout << "achou: ";
         for (Movimento mov : caminho) {

@@ -188,7 +188,7 @@ void keyboardChar(unsigned char key, int x, int y) {
         codificado.oriCoord = EstadoCodificado().oriToCoord(estado_inicial.ori);
         codificado.permCoord = EstadoCodificado().permToCoord(estado_inicial.pos);
 
-        bool achou = solve_bfs(codificado, caminho);
+        bool achou = solve_astar(codificado, caminho);
         if (achou) {
             cout << "achou: ";
             for (Movimento mov : caminho) {

@@ -13,9 +13,7 @@ Rodar: `./build/precompute_heuristic`
 <br/>
 <br/>
 # TODOs:
-- heurística
-- a* com heurística perfeita com ruído
-- ida* com LUT completa?
+- pesos na a*?
 - bilateral bfs?
 - two-fase algorithm??
 ---
