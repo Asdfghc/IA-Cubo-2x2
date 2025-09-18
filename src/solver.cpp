@@ -226,13 +226,13 @@ string solver_wrapper(const EstadoCodificado& estado_inicial, const string& meto
     cout << "Nº de estados explorados: " << n_visitados << endl;
 
     if (achou) {
-        string result = "Solução encontrada: ";
+        string result = "Solucao encontrada: ";
         for (Movimento mov : caminho) {
             result += movimento_to_str(mov) + " ";
         }
         return result;
     } else {
-        return "Solução não encontrada";
+        return "Solucao não encontrada";
     }
 }
 

@@ -16,28 +16,34 @@ struct Button {
 };
 
 // Variáveis globais para controle de rotação e estado do cubo
-float angle_horizontal = 0.0f;
-float angle_vertical = 0.0f;
+float angle_horizontal = 28.0f;
+float angle_vertical = -21.0f;
 array<array<Color, 6>, 8> stickers;
 EstadoDecodificado estado;
 string overlay_message = "";
 
+//Variáveis globais para controle da janela
+int window_width = 600;
+int window_height = 600;
+
 // Botões para seleção de algoritmo
 vector<Button> buttons = {
-    {20, 40, 100, 30, "A*", "astar"},
-    {140, 40, 100, 30, "BFS", "bfs"},
-    {260, 40, 100, 30, "DFS", "dfs"}
+    {500, 20, 100, 30, "A*", "astar"},
+    {500, 140, 100, 30, "BFS", "bfs"},
+    {500, 260, 100, 30, "DFS", "dfs"}
 };
 
-void drawButton(const Button& btn); // <-- Adicione esta linha antes da função display()
+void drawButton(const Button& btn);
 
 // Funções de callback do GLUT
 
 // Função de desenho principal
 void display() {
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
 
     // Configura a câmera
     glTranslatef(0, 0, -6);
@@ -57,6 +63,7 @@ void display() {
         {-offset, -offset, -offset},
         { offset, -offset, -offset}
     };
+    
     for (int i = 0; i < 8; i++) {
         drawCubie(positions[i][0], positions[i][1], positions[i][2], stickers[i]);
     }
@@ -68,13 +75,47 @@ void display() {
     int viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     gluOrtho2D(0, viewport[2], 0, viewport[3]);
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
 
     // Desenha botões
     for (const auto& btn : buttons)
         drawButton(btn);
+
+    //Mensagem do Menu
+    string menu_msg = "Use as setas para girar o cubo.\n"
+                      "Movimentos: L, l, U, u, F, f\n"
+                      "Clique nos botoes para escolher o algoritmo.";
+
+    glColor3f(0.9f, 0.9f, 0.9f);
+
+    int w = glutGet(GLUT_WINDOW_WIDTH);
+    int h = glutGet(GLUT_WINDOW_HEIGHT);
+
+    float x = w * 0.030f;
+    float y = h * 0.10f;
+
+    // Desenha cada linha do menu
+    size_t start = 0;
+    size_t end;
+    int line_height = h * 0.035f;
+
+    while ((end = menu_msg.find('\n', start)) != string::npos) {
+        string line = menu_msg.substr(start, end - start);
+        glRasterPos2f(x, y);
+        for (const char* c = line.c_str(); *c != '\0'; ++c)
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        y -= line_height;
+        start = end + 1;
+    }
+    
+    // Última linha
+    glRasterPos2f(x, y);
+    for (const char* c = menu_msg.c_str() + start; *c != '\0'; ++c)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
 
     // Mensagem de overlay (vermelha)
     if (!overlay_message.empty()) {
@@ -86,11 +127,11 @@ void display() {
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
     }
 
+    glEnable(GL_DEPTH_TEST);
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
-
     glutSwapBuffers();
 }
 
@@ -113,24 +154,44 @@ void drawButton(const Button& btn) {
     glVertex2f(btn.x, btn.y + btn.h);
     glEnd();
 
-    // Texto centralizado
-    glDisable(GL_DEPTH_TEST); // Desativa o depth test
+    // Texto
     glColor3f(1,1,1);
-    float text_x = btn.x + 12;
-    float text_y = btn.y + btn.h/2 -4;
+
+    int text_width = 0;
+
+    for (const char* c = btn.label.c_str(); *c; ++c)
+        text_width += glutBitmapWidth(GLUT_BITMAP_HELVETICA_18, *c);
+    
+    float text_x = btn.x + (btn.w - text_width) / 2;
+    float text_y = btn.y + (btn.h - 16) / 2;
     glRasterPos2f(text_x, text_y);
     for (const char* c = btn.label.c_str(); *c; ++c)
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
-    glEnable(GL_DEPTH_TEST); // Reativa o depth test
 }
 
 // Função chamada ao redimensionar a janela
 void reshape(int w, int h) {
+    window_width = w;
+    window_height = h;
+
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0, (double)w / h, 1.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
+
+    // Atualiza posições dos botões
+    int margin = 20;     
+    int btn_width = 100;  
+    int btn_height = 30;  
+    int spacing = 10;
+
+    for (int i = 0; i < buttons.size(); i++) {
+        buttons[i].x = w - btn_width - margin;
+        buttons[i].y = margin + i * (btn_height + spacing);
+        buttons[i].w = btn_width;
+        buttons[i].h = btn_height;
+    }
 }
 
 // Callback para teclas especiais (setas)
