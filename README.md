@@ -30,7 +30,7 @@ Rodar: `./build/precompute_heuristic`
 Compilar: `g++ src/*.cpp -Iinclude -o build/main -lGL -lGLU -lglut`\
 Rodar: `./build/main`
 
-#### Para teste standalone do solver:
+#### (Opcional) Para teste standalone do solver:
 Compilar: `g++ src/solver.cpp src/cube_state.cpp -DSOLVER_STANDALONE -Iinclude -o build/solver`\
 Rodar: `./build/solver`
 
