@@ -9,12 +9,27 @@
 
 using namespace std;
 
+struct Button {
+    float x, y, w, h;   // Coordenadas
+    string label;  
+    string solver; // "astar", "bfs", "dfs"
+};
+
 // Variáveis globais para controle de rotação e estado do cubo
 float angle_horizontal = 0.0f;
 float angle_vertical = 0.0f;
 array<array<Color, 6>, 8> stickers;
 EstadoDecodificado estado;
 string overlay_message = "";
+
+// Botões para seleção de algoritmo
+vector<Button> buttons = {
+    {20, 40, 100, 30, "A*", "astar"},
+    {140, 40, 100, 30, "BFS", "bfs"},
+    {260, 40, 100, 30, "DFS", "dfs"}
+};
+
+void drawButton(const Button& btn); // <-- Adicione esta linha antes da função display()
 
 // Funções de callback do GLUT
 
@@ -46,36 +61,67 @@ void display() {
         drawCubie(positions[i][0], positions[i][1], positions[i][2], stickers[i]);
     }
 
-    // Desenha mensagem de overlay (texto 2D)
-    if (!overlay_message.empty()) {
-        // Salva as matrizes atuais
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        int viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
-        gluOrtho2D(0, viewport[2], 0, viewport[3]);
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+    // Overlay 2D para botões e mensagem
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    gluOrtho2D(0, viewport[2], 0, viewport[3]);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
 
-        // Define cor do texto (vermelho)
+    // Desenha botões
+    for (const auto& btn : buttons)
+        drawButton(btn);
+
+    // Mensagem de overlay (vermelha)
+    if (!overlay_message.empty()) {
         glColor3f(1.0f, 0.0f, 0.0f);
-        // Posição: canto superior esquerdo
         float x = 10.0f;
         float y = viewport[3] - 30.0f;
         glRasterPos2f(x, y);
-        for (const char* c = overlay_message.c_str(); *c != '\0'; ++c) {
+        for (const char* c = overlay_message.c_str(); *c != '\0'; ++c)
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
-        }
-
-        // Restaura as matrizes
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
     }
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
     glutSwapBuffers();
+}
+
+void drawButton(const Button& btn) {
+    // Retângulo do botão
+    glColor3f(0.2f, 0.2f, 0.8f);
+    glBegin(GL_QUADS);
+    glVertex2f(btn.x, btn.y);
+    glVertex2f(btn.x + btn.w, btn.y);
+    glVertex2f(btn.x + btn.w, btn.y + btn.h);
+    glVertex2f(btn.x, btn.y + btn.h);
+    glEnd();
+
+    // Borda
+    glColor3f(1,1,1);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(btn.x, btn.y);
+    glVertex2f(btn.x + btn.w, btn.y);
+    glVertex2f(btn.x + btn.w, btn.y + btn.h);
+    glVertex2f(btn.x, btn.y + btn.h);
+    glEnd();
+
+    // Texto centralizado
+    glDisable(GL_DEPTH_TEST); // Desativa o depth test
+    glColor3f(1,1,1);
+    float text_x = btn.x + 12;
+    float text_y = btn.y + btn.h/2 -4;
+    glRasterPos2f(text_x, text_y);
+    for (const char* c = btn.label.c_str(); *c; ++c)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    glEnable(GL_DEPTH_TEST); // Reativa o depth test
 }
 
 // Função chamada ao redimensionar a janela
@@ -138,6 +184,25 @@ void keyboardChar(unsigned char key, int x, int y) {
     glutPostRedisplay();
 }
 
+void mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        int win_h = viewport[3];
+        y = win_h - y;
+
+        for (const auto& btn : buttons) {
+            if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
+                EstadoCodificado codificado;
+                codificado.oriCoord = EstadoCodificado::oriToCoord(estado.ori);
+                codificado.permCoord = EstadoCodificado::permToCoord(estado.pos);
+                overlay_message = solver_wrapper(codificado, btn.solver, 0);
+                glutPostRedisplay();
+                break;
+            }
+        }
+    }
+}
 
 int main(int argc, char** argv) {
     carregarTabelas();
@@ -157,6 +222,7 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshape);
     glutSpecialFunc(keyboard);
     glutKeyboardFunc(keyboardChar);
+    glutMouseFunc(mouse);
 
     // Inicia o loop principal
     glutMainLoop();
