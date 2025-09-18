@@ -1,3 +1,0 @@
-/usr/bin/ld: /tmp/cc2UjN46.o: in function `carregarTabelas()':
-solver.cpp:(.text+0x0): multiple definition of `carregarTabelas()'; /tmp/ccLISvtP.o:main.cpp:(.text+0x0): first defined here
-collect2: error: ld returned 1 exit status
