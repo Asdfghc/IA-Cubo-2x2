@@ -18,21 +18,33 @@ TODO: (Imagem)
 - **g++** (para compilar o código)
 - **OpenGL** e **GLUT** (para a visualização gráfica)
 
+## Automaticamente:
+
+```
+./run.sh
+```
+
+## Manualmente:
+
 ### 1. Precomputação da tabela de movimentos:
-Compilar: `g++ precompute/precompute_moves.cpp src/cube_state.cpp -Iinclude -o build/precompute_moves`\
-Rodar: `./build/precompute_moves`  
+- **Compilar:** `g++ precompute/precompute_moves.cpp src/cube_state.cpp -Iinclude -o build/precompute_moves`
+
+- **Rodar:** `./build/precompute_moves`
 
 ### 2. Precomputação da heurística:
-Compilar: `g++ precompute/precompute_heuristic.cpp src/cube_state.cpp -Iinclude -o build/precompute_heuristic`\
-Rodar: `./build/precompute_heuristic`  
+- **Compilar:** `g++ precompute/precompute_heuristic.cpp src/cube_state.cpp -Iinclude -o build/precompute_heuristic`
+
+- **Rodar:** `./build/precompute_heuristic`
 
 ### 3. Principal
-Compilar: `g++ src/*.cpp -Iinclude -o build/main -lGL -lGLU -lglut`\
-Rodar: `./build/main`
+- **Compilar:** `g++ src/*.cpp -Iinclude -o build/main -lGL -lGLU -lglut`
+
+- **Rodar:** `./build/main`
 
 #### (Opcional) Para teste standalone do solver:
-Compilar: `g++ src/solver.cpp src/cube_state.cpp -DSOLVER_STANDALONE -Iinclude -o build/solver`\
-Rodar: `./build/solver`
+- **Compilar:** `g++ src/solver.cpp src/cube_state.cpp -DSOLVER_STANDALONE -Iinclude -o build/solver`
+
+- **Rodar:** `./build/solver`
 
 # Melhorias futuras:
 - Interface gráfica mais amigável, com animações e mais movimentos.
