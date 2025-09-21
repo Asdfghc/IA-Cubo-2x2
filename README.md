@@ -3,7 +3,7 @@ Este projeto implementa um solucionador para o Cubo Mágico 2x2 utilizando técn
 
 Para isso, foram utilizados **C++** para a implementação dos algoritmos e estruturas de dados e **OpenGL** para a visualização do cubo e das soluções encontradas.
 
-TODO: (Imagem)
+![alt text](image.png)
 
 ## Algoritmos implementados:
 - ### BFS - Busca em largura com otimização para evitar estados repetidos.
